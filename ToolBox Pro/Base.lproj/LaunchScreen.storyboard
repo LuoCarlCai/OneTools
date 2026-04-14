@@ -14,58 +14,71 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-yellow">
-                                <rect key="frame" x="-46" y="104" width="144" height="144"/>
-                                <color key="backgroundColor" red="0.99215686269999995" green="0.90196078430000001" blue="0.59215686269999998" alpha="0.48" colorSpace="custom" customColorSpace="sRGB"/>
+                                <rect key="frame" x="-84" y="108" width="168" height="168"/>
+                                <color key="backgroundColor" red="1" green="0.9058823529" blue="0.6588235294" alpha="0.54" colorSpace="custom" customColorSpace="sRGB"/>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-green">
-                                <rect key="frame" x="276" y="92" width="154" height="154"/>
-                                <color key="backgroundColor" red="0.74117647059999997" green="0.95686274510000003" blue="0.86274509800000005" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <rect key="frame" x="286" y="84" width="176" height="176"/>
+                                <color key="backgroundColor" red="0.7490196078" green="0.937254902" blue="0.9019607843" alpha="0.76" colorSpace="custom" customColorSpace="sRGB"/>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-pink">
-                                <rect key="frame" x="240" y="664" width="190" height="190"/>
-                                <color key="backgroundColor" red="0.97647058819999995" green="0.83921568630000003" blue="0.90588235289999995" alpha="0.28" colorSpace="custom" customColorSpace="sRGB"/>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-purple">
+                                <rect key="frame" x="226" y="690" width="210" height="210"/>
+                                <color key="backgroundColor" red="0.9058823529" green="0.8588235294" blue="1" alpha="0.44" colorSpace="custom" customColorSpace="sRGB"/>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="accent-line">
+                                <rect key="frame" x="32" y="248" width="1" height="150"/>
+                                <color key="backgroundColor" white="1" alpha="0.72" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="brand-block">
-                                <rect key="frame" x="24" y="194" width="250" height="118"/>
+                                <rect key="frame" x="32" y="229" width="300" height="134"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="OneTools" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="title-main">
-                                        <rect key="frame" x="0.0" y="0.0" width="160" height="44"/>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="39"/>
-                                        <color key="textColor" red="0.066666666670000002" green="0.10196078430000001" blue="0.168627451" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Everyday utilities, instantly." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="subtitle-main">
-                                        <rect key="frame" x="0.0" y="56" width="214" height="22"/>
-                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
-                                        <color key="textColor" red="0.41176470590000001" green="0.47058823530000003" blue="0.56862745100000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="ALL-IN-ONE UTILITIES" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eyebrow-main">
-                                        <rect key="frame" x="0.0" y="96" width="109" height="16"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="ONE DAILY UTILITY SUITE" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eyebrow-main">
+                                        <rect key="frame" x="0.0" y="0.0" width="157" height="14"/>
                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
-                                        <color key="textColor" red="0.41176470590000001" green="0.47058823530000003" blue="0.56862745100000001" alpha="0.76000000000000001" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <color key="textColor" red="0.4823529412" green="0.5294117647" blue="0.5960784314" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="OneTools" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="title-main">
+                                        <rect key="frame" x="0.0" y="28" width="180" height="48"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="42"/>
+                                        <color key="textColor" red="0.05882352941" green="0.09019607843" blue="0.1647058824" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Everyday utility tools, refined." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="subtitle-main">
+                                        <rect key="frame" x="0.0" y="86" width="244" height="22"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
+                                        <color key="textColor" red="0.4" green="0.4392156863" blue="0.5215686275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="CALCULATE  CONVERT  SCAN  TRANSCRIBE" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="YES" translatesAutoresizingMaskIntoConstraints="NO" id="detail-main">
+                                        <rect key="frame" x="0.0" y="123" width="277" height="14"/>
+                                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
+                                        <color key="textColor" red="0.5803921569" green="0.6392156863" blue="0.7215686275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
                                 </subviews>
                                 <constraints>
-                                    <constraint firstItem="title-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b01"/>
-                                    <constraint firstItem="title-main" firstAttribute="top" secondItem="brand-block" secondAttribute="top" id="b02"/>
-                                    <constraint firstItem="subtitle-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b03"/>
-                                    <constraint firstItem="subtitle-main" firstAttribute="top" secondItem="title-main" secondAttribute="bottom" constant="12" id="b04"/>
-                                    <constraint firstItem="eyebrow-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b05"/>
-                                    <constraint firstItem="eyebrow-main" firstAttribute="top" secondItem="subtitle-main" secondAttribute="bottom" constant="18" id="b06"/>
-                                    <constraint firstAttribute="bottom" secondItem="eyebrow-main" secondAttribute="bottom" constant="6" id="b07"/>
+                                    <constraint firstItem="eyebrow-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b01"/>
+                                    <constraint firstItem="eyebrow-main" firstAttribute="top" secondItem="brand-block" secondAttribute="top" id="b02"/>
+                                    <constraint firstItem="title-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b03"/>
+                                    <constraint firstItem="title-main" firstAttribute="top" secondItem="eyebrow-main" secondAttribute="bottom" constant="14" id="b04"/>
+                                    <constraint firstItem="subtitle-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b05"/>
+                                    <constraint firstItem="subtitle-main" firstAttribute="top" secondItem="title-main" secondAttribute="bottom" constant="10" id="b06"/>
+                                    <constraint firstItem="detail-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b07"/>
+                                    <constraint firstItem="detail-main" firstAttribute="top" secondItem="subtitle-main" secondAttribute="bottom" constant="15" id="b08"/>
+                                    <constraint firstAttribute="bottom" secondItem="detail-main" secondAttribute="bottom" id="b09"/>
                                 </constraints>
                             </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
-                        <color key="backgroundColor" red="0.98431372550000002" green="0.98823529409999999" blue="0.99215686270000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.9882352941" green="0.9882352941" blue="0.9960784314" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="brand-block" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" constant="24" id="m01"/>
-                            <constraint firstItem="brand-block" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" constant="134" id="m02"/>
-                            <constraint firstItem="orb-yellow" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="-46" id="m03"/>
-                            <constraint firstItem="orb-yellow" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" constant="104" id="m04"/>
-                            <constraint firstAttribute="trailing" secondItem="orb-green" secondAttribute="trailing" constant="-37" id="m05"/>
-                            <constraint firstItem="orb-green" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" constant="92" id="m06"/>
-                            <constraint firstAttribute="trailing" secondItem="orb-pink" secondAttribute="trailing" constant="-36" id="m07"/>
-                            <constraint firstItem="orb-pink" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" constant="-18" id="m08"/>
+                            <constraint firstItem="brand-block" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" constant="32" id="m01"/>
+                            <constraint firstItem="brand-block" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" constant="168" id="m02"/>
+                            <constraint firstItem="orb-yellow" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="-84" id="m03"/>
+                            <constraint firstItem="orb-yellow" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" constant="108" id="m04"/>
+                            <constraint firstAttribute="trailing" secondItem="orb-green" secondAttribute="trailing" constant="-69" id="m05"/>
+                            <constraint firstItem="orb-green" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" constant="84" id="m06"/>
+                            <constraint firstItem="accent-line" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" constant="32" id="m07"/>
+                            <constraint firstItem="accent-line" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" constant="199" id="m08"/>
+                            <constraint firstAttribute="trailing" secondItem="orb-purple" secondAttribute="trailing" constant="-43" id="m09"/>
+                            <constraint firstItem="orb-purple" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" constant="48" id="m10"/>
                         </constraints>
                     </view>
                 </viewController>

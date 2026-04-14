@@ -23,8 +23,13 @@
 "Last Calculation" = "最近一次计算";
 "Last Transcript" = "最近一次转写";
 "Remove Ads" = "去广告";
+"Go Pro" = "开通专业版";
 "Pro" = "专业版";
 "Everyday utilities, instantly." = "日常工具，一点即用。";
+"Thoughtful tools for daily work." = "为日常工作准备的精致工具。";
+"Everyday utility tools, refined." = "日常实用工具，更讲究一些。";
+"ONE DAILY UTILITY SUITE" = "每日效率工具集";
+"CALCULATE  CONVERT  SCAN  TRANSCRIBE" = "计算  换算  扫描  转写";
 "System" = "跟随系统";
 "Light" = "浅色";
 "Dark" = "深色";
@@ -38,6 +43,7 @@
 "Restorable on your devices with the same Apple ID" = "同一 Apple ID 可恢复";
 "One-time purchase with restore support" = "一次购买，支持恢复";
 "Monthly subscription with restore support" = "包月订阅，支持恢复";
+"OneTools Pro" = "OneTools 专业版";
 "App Status" = "应用状态";
 "Version" = "版本";
 "Build" = "构建号";
@@ -137,6 +143,8 @@
 "No account setup required. Purchase once and keep Pro ready whenever you reinstall." = "无需额外注册账号，一次购买，重新安装后依旧可用。";
 "Already purchased before? Restore takes a moment and keeps your access on the same Apple ID." = "如果你之前买过，恢复购买只需片刻，并会保留同一 Apple ID 的使用权限。";
 "Keep OneTools focused, fast, and ready across your devices." = "让 OneTools 在你的设备上始终保持清爽、快速、可恢复。";
+"Your tools stay unlocked and ready across devices." = "你的工具会在各设备间保持解锁并随时可用。";
+"Keep every core tool unlocked in one calm workspace." = "让所有核心工具都保持解锁，并集中在一个安静清爽的工作空间里。";
 "Access" = "权益";
 "Restore" = "恢复";
 "Included" = "已包含";

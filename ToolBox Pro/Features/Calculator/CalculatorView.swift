@@ -37,11 +37,6 @@ struct CalculatorView: View {
                         overviewCards
                         display
                         keypad
-
-                        if !purchaseStore.isProUnlocked {
-                            adPlaceholder
-                        }
-
                         historyPreview
                     }
                 }
@@ -218,27 +213,6 @@ struct CalculatorView: View {
                 }
             }
         }
-    }
-
-    private var adPlaceholder: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(AppLocalizer.string("Upgrade for a cleaner workspace"))
-                .appFont(size: 16, weight: .bold)
-                .foregroundColor(AppColor.primaryText)
-
-            Text(AppLocalizer.string("Subscribe monthly to remove ads across core tools. Active subscriptions restore automatically on the same Apple ID."))
-                .appFont(size: 14, weight: .regular)
-                .foregroundColor(AppColor.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(AppColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
-        )
     }
 
     private func overviewCard(title: String, value: String, tint: Color) -> some View {

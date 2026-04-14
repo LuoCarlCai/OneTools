@@ -37,7 +37,7 @@ struct SettingsView: View {
                         NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
                             SettingsRow(
                                 icon: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
-                                title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Unlocked") : AppLocalizer.string("Remove Ads"),
+                                title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Unlocked") : AppLocalizer.string("Go Pro"),
                                 subtitle: purchaseStore.isProUnlocked ? AppLocalizer.string("Restorable on your devices with the same Apple ID") : AppLocalizer.string("Monthly subscription with restore support"),
                                 accessoryColor: purchaseStore.isProUnlocked ? AppColor.success : AppColor.warning
                             )
@@ -446,7 +446,7 @@ struct PaywallView: View {
                             .appFont(size: 18, weight: .bold)
                             .foregroundColor(AppColor.primaryText)
 
-                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Removes banner ads from core tools"))
+                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Keeps the full tool set ready offline"))
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Use Pro while your subscription is active"))
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Restore anytime with the same Apple ID while active"))
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("If the subscription expires and does not renew, Pro access ends automatically"))
@@ -461,7 +461,7 @@ struct PaywallView: View {
 
                     VStack(alignment: .leading, spacing: 14) {
                         HStack(spacing: 12) {
-                            benefitCard(title: AppLocalizer.string("Cleaner"), detail: AppLocalizer.string("Focus on tools without banner interruptions."), tint: AppColor.primary)
+                            benefitCard(title: AppLocalizer.string("Cleaner"), detail: AppLocalizer.string("Keep every core tool unlocked in one calm workspace."), tint: AppColor.primary)
                             benefitCard(title: AppLocalizer.string("Restorable"), detail: AppLocalizer.string("Sign in with the same Apple ID to restore your active subscription on a new device."), tint: AppColor.success)
                         }
 
@@ -511,7 +511,7 @@ struct PaywallView: View {
                 .padding(20)
             }
         }
-        .navigationTitle(AppLocalizer.string("Remove Ads"))
+        .navigationTitle(AppLocalizer.string("OneTools Pro"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -519,7 +519,7 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Is Active") : AppLocalizer.string("Go Ad-Free"))
+                    Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Is Active") : AppLocalizer.string("Go Pro"))
                         .appFont(size: 24, weight: .bold)
                         .foregroundColor(.white)
 

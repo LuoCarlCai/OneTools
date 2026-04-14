@@ -46,7 +46,7 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
-                    Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Pro") : AppLocalizer.string("Remove Ads"))
+                    Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Pro") : AppLocalizer.string("Go Pro"))
                         .appFont(size: 14, weight: .bold)
                         .foregroundColor(purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary)
                 }
@@ -106,7 +106,7 @@ struct HomeView: View {
                     featuredCard(
                         title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Ready") : AppLocalizer.string("Unlock Pro"),
                         detail: purchaseStore.isProUnlocked
-                            ? AppLocalizer.string("Your tools stay clean and ad-free across devices.")
+                            ? AppLocalizer.string("Your tools stay unlocked and ready across devices.")
                             : AppLocalizer.string("Monthly Pro restores on your new device with the same Apple ID while active."),
                         symbol: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
                         tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
