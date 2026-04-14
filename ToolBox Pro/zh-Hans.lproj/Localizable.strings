@@ -1,6 +1,8 @@
 "ToolBox Pro" = "OneTools";
+"ONE PLACE, DAILY TOOLS" = "一个地方，搞定日常工具";
 "Tools" = "工具";
 "Settings" = "设置";
+"SETTINGS" = "设置";
 "Calculator" = "计算器";
 "Unit Converter" = "单位换算";
 "QR Toolkit" = "二维码";
@@ -20,6 +22,7 @@
 "Private" = "私密";
 "Global" = "国际";
 "Recent Activity" = "最近活动";
+"Jump back into what matters" = "直接回到你最常用的事";
 "Last Calculation" = "最近一次计算";
 "Last Transcript" = "最近一次转写";
 "Remove Ads" = "去广告";
@@ -39,12 +42,15 @@
 "Theme, contrast, and preview" = "主题、对比度与预览";
 "History controls and local data cleanup" = "历史记录与本地数据清理";
 "Interface preference and voice defaults" = "界面语言与语音默认值";
+"Make the app feel right for you" = "把应用调成更适合你的样子";
+"Keep Pro ready across devices" = "让专业版在设备间随时可恢复";
 "Pro Unlocked" = "已解锁专业版";
 "Restorable on your devices with the same Apple ID" = "同一 Apple ID 可恢复";
 "One-time purchase with restore support" = "一次购买，支持恢复";
 "Monthly subscription with restore support" = "包月订阅，支持恢复";
 "OneTools Pro" = "OneTools 专业版";
 "App Status" = "应用状态";
+"Current build and access" = "当前版本与权限状态";
 "Version" = "版本";
 "Build" = "构建号";
 "Core tools are ready offline for fast daily use." = "核心工具支持离线使用，适合日常快速处理。";
@@ -168,6 +174,7 @@
 "Languages" = "语言数";
 "Yes" = "是";
 "Your latest calculations and transcripts will show up here." = "你最近的计算和转写会显示在这里。";
+"Pick up where you left off" = "从上次停下的地方继续";
 "Theme" = "主题";
 "Preview" = "预览";
 "Primary" = "主色";

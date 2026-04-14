@@ -16,12 +16,17 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.success)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 28) {
                     header
                     VStack(alignment: .leading, spacing: 14) {
+                        sectionHeader(
+                            eyebrow: AppLocalizer.string("Start Here"),
+                            title: AppLocalizer.string("Jump back into what matters")
+                        )
+
                         featuredStrip
 
                         LazyVGrid(columns: columns, spacing: 14) {
@@ -55,14 +60,19 @@ struct HomeView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(AppLocalizer.string("ONE PLACE, DAILY TOOLS"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(AppColor.secondaryText)
+                    .tracking(1.4)
+
                 Text(AppLocalizer.string("OneTools"))
-                    .appFont(size: 22, weight: .bold)
+                    .appFont(size: 34, weight: .bold)
                     .foregroundColor(AppColor.primaryText)
 
-                Text(AppLocalizer.string("Calculate, convert, scan, watermark, compress, and transcribe in one clean workspace."))
-                    .appFont(size: 16, weight: .regular)
+                Text(AppLocalizer.string("Calculate, convert, scan, watermark, compress, and transcribe in one calm workspace."))
+                    .appFont(size: 17, weight: .medium)
                     .foregroundColor(AppColor.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -72,56 +82,43 @@ struct HomeView: View {
                     BadgeView(title: AppLocalizer.string("Global"), color: AppColor.warning)
                 }
             }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColor.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(AppColor.border, lineWidth: 1)
-            )
 
             quickStats
         }
     }
 
     private var featuredStrip: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(AppLocalizer.string("Start Here"))
-                .appFont(size: 18, weight: .bold)
-                .foregroundColor(AppColor.primaryText)
-
-            HStack(spacing: 14) {
-                NavigationLink(destination: QRCodeToolView(initialMode: .scan).hidesTabBarOnPush()) {
-                    featuredCard(
-                        title: AppLocalizer.string("Quick Scan"),
-                        detail: AppLocalizer.string("Open QR Toolkit to scan links, Wi-Fi, and notes in seconds."),
-                        symbol: "qrcode.viewfinder",
-                        tint: AppColor.warning
-                    )
-                }
-                .buttonStyle(.plain)
-
-                NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
-                    featuredCard(
-                        title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Ready") : AppLocalizer.string("Unlock Pro"),
-                        detail: purchaseStore.isProUnlocked
-                            ? AppLocalizer.string("Your tools stay unlocked and ready across devices.")
-                            : AppLocalizer.string("Monthly Pro restores on your new device with the same Apple ID while active."),
-                        symbol: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
-                        tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
-                    )
-                }
-                .buttonStyle(.plain)
+        HStack(spacing: 14) {
+            NavigationLink(destination: QRCodeToolView(initialMode: .scan).hidesTabBarOnPush()) {
+                featuredCard(
+                    title: AppLocalizer.string("Quick Scan"),
+                    detail: AppLocalizer.string("Open QR Toolkit to scan links, Wi-Fi, and notes in seconds."),
+                    symbol: "qrcode.viewfinder",
+                    tint: AppColor.warning
+                )
             }
+            .buttonStyle(.plain)
+
+            NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
+                featuredCard(
+                    title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Ready") : AppLocalizer.string("Unlock Pro"),
+                    detail: purchaseStore.isProUnlocked
+                        ? AppLocalizer.string("Your tools stay unlocked and ready across devices.")
+                        : AppLocalizer.string("Monthly Pro restores on your new device with the same Apple ID while active."),
+                    symbol: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
+                    tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
     private var recentActivitySection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(AppLocalizer.string("Recent Activity"))
-                .appFont(size: 18, weight: .bold)
-                .foregroundColor(AppColor.primaryText)
+            sectionHeader(
+                eyebrow: AppLocalizer.string("Recent Activity"),
+                title: AppLocalizer.string("Pick up where you left off")
+            )
 
             if let calc = latestCalculation, !calc.text.isEmpty {
                 RecentActivityCard(title: AppLocalizer.string("Last Calculation"), value: calc.text, color: AppColor.primary, symbol: "plus.forwardslash.minus")
@@ -157,17 +154,13 @@ struct HomeView: View {
                 .appFont(size: 13, weight: .medium)
                 .foregroundColor(AppColor.secondaryText)
             Text(value)
-                .appFont(size: 18, weight: .bold)
+                .appFont(size: 20, weight: .bold)
                 .foregroundColor(tint)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(AppColor.surface)
+        .background(tint.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
-        )
     }
 
     private func featuredCard(title: String, detail: String, symbol: String, tint: Color) -> some View {
@@ -189,16 +182,44 @@ struct HomeView: View {
             Text(detail)
                 .appFont(size: 14, weight: .regular)
                 .foregroundColor(AppColor.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(4)
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 6) {
+                Text(AppLocalizer.string("Open"))
+                    .appFont(size: 13, weight: .bold)
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 11, weight: .bold))
+            }
+            .foregroundColor(tint)
         }
         .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168, alignment: .topLeading)
         .padding(16)
-        .background(AppColor.surface)
+        .background(
+            LinearGradient(
+                colors: [AppColor.surface, tint.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
+                .stroke(tint.opacity(0.12), lineWidth: 1)
         )
+    }
+
+    private func sectionHeader(eyebrow: String, title: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(eyebrow)
+                .appFont(size: 13, weight: .bold)
+                .foregroundColor(AppColor.secondaryText)
+
+            Text(title)
+                .appFont(size: 24, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+        }
     }
 }
 
@@ -229,32 +250,42 @@ private struct ToolTile: View {
     let tool: ToolItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(tool.color.opacity(0.14))
-                    .frame(width: 48, height: 48)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(tool.color.opacity(0.12))
+                        .frame(width: 48, height: 48)
 
-                Image(systemName: tool.symbol)
-                    .font(.system(size: 21, weight: .bold))
-                    .foregroundColor(tool.color)
+                    Image(systemName: tool.symbol)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(tool.color)
+                }
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(AppColor.secondaryText.opacity(0.6))
             }
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(tool.title)
                     .appFont(size: 18, weight: .bold)
                     .foregroundColor(AppColor.primaryText)
 
                 Text(tool.subtitle)
-                    .appFont(size: 14, weight: .regular)
-                    .foregroundColor(AppColor.secondaryText)
-                    .lineLimit(2)
+                    .appFont(size: 14, weight: .medium)
+                    .foregroundColor(tool.color)
+                    .lineLimit(1)
 
                 Text(tool.description)
                     .appFont(size: 13, weight: .regular)
                     .foregroundColor(AppColor.secondaryText)
                     .lineLimit(3)
             }
+
+            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, minHeight: 176, maxHeight: 176, alignment: .topLeading)
         .padding(16)
@@ -262,7 +293,7 @@ private struct ToolTile: View {
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
+                .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
         )
     }
 }
@@ -277,7 +308,7 @@ private struct BadgeView: View {
             .foregroundColor(color)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(color.opacity(0.14))
+            .background(color.opacity(0.12))
             .clipShape(Capsule())
     }
 }
@@ -316,7 +347,7 @@ private struct RecentActivityCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
+                .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
         )
     }
 }

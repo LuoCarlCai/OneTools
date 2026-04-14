@@ -1,6 +1,8 @@
 "ToolBox Pro" = "OneTools";
+"ONE PLACE, DAILY TOOLS" = "ONE PLACE, DAILY TOOLS";
 "Tools" = "Tools";
 "Settings" = "Settings";
+"SETTINGS" = "SETTINGS";
 "Calculator" = "Calculator";
 "Unit Converter" = "Unit Converter";
 "QR Toolkit" = "QR Toolkit";
@@ -20,6 +22,7 @@
 "Private" = "Private";
 "Global" = "Global";
 "Recent Activity" = "Recent Activity";
+"Jump back into what matters" = "Jump back into what matters";
 "Last Calculation" = "Last Calculation";
 "Last Transcript" = "Last Transcript";
 "Remove Ads" = "Remove Ads";
@@ -39,12 +42,15 @@
 "Theme, contrast, and preview" = "Theme, contrast, and preview";
 "History controls and local data cleanup" = "History controls and local data cleanup";
 "Interface preference and voice defaults" = "Interface preference and voice defaults";
+"Make the app feel right for you" = "Make the app feel right for you";
+"Keep Pro ready across devices" = "Keep Pro ready across devices";
 "Pro Unlocked" = "Pro Unlocked";
 "Restorable on your devices with the same Apple ID" = "Restorable on your devices with the same Apple ID";
 "One-time purchase with restore support" = "One-time purchase with restore support";
 "Monthly subscription with restore support" = "Monthly subscription with restore support";
 "OneTools Pro" = "OneTools Pro";
 "App Status" = "App Status";
+"Current build and access" = "Current build and access";
 "Version" = "Version";
 "Build" = "Build";
 "Core tools are ready offline for fast daily use." = "Core tools are ready offline for fast daily use.";
@@ -168,6 +174,7 @@
 "Languages" = "Languages";
 "Yes" = "Yes";
 "Your latest calculations and transcripts will show up here." = "Your latest calculations and transcripts will show up here.";
+"Pick up where you left off" = "Pick up where you left off";
 "Theme" = "Theme";
 "Preview" = "Preview";
 "Primary" = "Primary";

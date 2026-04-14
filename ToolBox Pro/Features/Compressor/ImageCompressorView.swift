@@ -30,7 +30,7 @@ struct ImageCompressorView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: Color(hex: 0x14B8A6), secondaryTint: AppColor.primary)
 
             ScrollView {
                 VStack(spacing: 18) {

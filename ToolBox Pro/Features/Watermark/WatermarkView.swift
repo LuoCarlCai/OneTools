@@ -19,7 +19,7 @@ struct WatermarkView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: Color(hex: 0x8B5CF6), secondaryTint: AppColor.primary)
 
             ScrollView {
                 VStack(spacing: 18) {

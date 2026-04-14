@@ -11,6 +11,46 @@ enum AppColor {
     static let border = Color.dynamic(light: 0xE5E7EB, dark: 0x374151)
 }
 
+struct AppPageBackground: View {
+    let primaryTint: Color
+    let secondaryTint: Color
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color.dynamic(light: 0xFCFCFE, dark: 0x0F172A),
+                    Color.dynamic(light: 0xF5F8FC, dark: 0x111827)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            RoundedRectangle(cornerRadius: 36, style: .continuous)
+                .fill(primaryTint.opacity(0.08))
+                .frame(width: 280, height: 220)
+                .rotationEffect(.degrees(-12))
+                .blur(radius: 2)
+                .offset(x: -120, y: -300)
+
+            RoundedRectangle(cornerRadius: 44, style: .continuous)
+                .fill(secondaryTint.opacity(0.08))
+                .frame(width: 240, height: 200)
+                .rotationEffect(.degrees(18))
+                .blur(radius: 2)
+                .offset(x: 150, y: -210)
+
+            RoundedRectangle(cornerRadius: 56, style: .continuous)
+                .fill(primaryTint.opacity(0.04))
+                .frame(width: 320, height: 260)
+                .rotationEffect(.degrees(20))
+                .offset(x: 170, y: 360)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
 extension View {
     func appFont(size: CGFloat, weight: Font.Weight = .regular) -> some View {
         font(.system(size: size, weight: weight, design: .rounded))

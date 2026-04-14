@@ -19,7 +19,7 @@ struct VoiceToTextView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: Color(hex: 0xEC4899), secondaryTint: AppColor.warning)
 
             ScrollView {
                 VStack(spacing: 18) {

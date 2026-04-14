@@ -47,7 +47,7 @@ struct QRCodeToolView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.warning, secondaryTint: AppColor.primary)
 
             VStack(spacing: 18) {
                 if isLocked {

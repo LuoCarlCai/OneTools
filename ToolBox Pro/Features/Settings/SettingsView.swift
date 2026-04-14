@@ -6,15 +6,16 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.warning)
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 28) {
                     settingsHeader
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(AppLocalizer.string("Preferences"))
-                            .appFont(size: 18, weight: .bold)
-                            .foregroundColor(AppColor.primaryText)
+                        settingsSectionHeader(
+                            eyebrow: AppLocalizer.string("Preferences"),
+                            title: AppLocalizer.string("Make the app feel right for you")
+                        )
 
                         NavigationLink(destination: AppearanceSettingsView().hidesTabBarOnPush()) {
                             SettingsRow(icon: "paintbrush", title: AppLocalizer.string("Appearance"), subtitle: AppLocalizer.string("Theme, contrast, and preview"))
@@ -30,9 +31,10 @@ struct SettingsView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(AppLocalizer.string("Upgrade"))
-                            .appFont(size: 18, weight: .bold)
-                            .foregroundColor(AppColor.primaryText)
+                        settingsSectionHeader(
+                            eyebrow: AppLocalizer.string("Upgrade"),
+                            title: AppLocalizer.string("Keep Pro ready across devices")
+                        )
 
                         NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
                             SettingsRow(
@@ -54,13 +56,18 @@ struct SettingsView: View {
     }
 
     private var settingsHeader: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 18) {
+            Text(AppLocalizer.string("SETTINGS"))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(AppColor.secondaryText)
+                .tracking(1.4)
+
             Text(AppLocalizer.string("Settings"))
-                .appFont(size: 22, weight: .bold)
+                .appFont(size: 34, weight: .bold)
                 .foregroundColor(AppColor.primaryText)
 
             Text(AppLocalizer.string("Control appearance, privacy, language, and your Pro access from one place."))
-                .appFont(size: 15, weight: .regular)
+                .appFont(size: 17, weight: .medium)
                 .foregroundColor(AppColor.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -77,36 +84,22 @@ struct SettingsView: View {
                 )
             }
         }
-        .padding(18)
-        .background(AppColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
-        )
     }
 
     private var settingsStatusCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(AppLocalizer.string("App Status"))
-                .appFont(size: 18, weight: .bold)
-            HStack {
-                Text(AppLocalizer.string("Version"))
-                Spacer()
-                Text(Bundle.main.releaseVersionNumber)
-            }
-            HStack {
-                Text(AppLocalizer.string("Build"))
-                Spacer()
-                Text(Bundle.main.buildVersionNumber)
-            }
-            HStack {
-                Text(AppLocalizer.string("Subscription"))
-                Spacer()
-                Text(purchaseStore.subscriptionStatusTitle)
-            }
+        VStack(alignment: .leading, spacing: 14) {
+            settingsSectionHeader(
+                eyebrow: AppLocalizer.string("App Status"),
+                title: AppLocalizer.string("Current build and access")
+            )
+
+            statusLine(title: AppLocalizer.string("Version"), value: Bundle.main.releaseVersionNumber)
+            statusLine(title: AppLocalizer.string("Build"), value: Bundle.main.buildVersionNumber)
+            statusLine(title: AppLocalizer.string("Subscription"), value: purchaseStore.subscriptionStatusTitle)
+
             Text(AppLocalizer.string("Core tools are ready offline for fast daily use."))
                 .foregroundColor(AppColor.secondaryText)
+                .appFont(size: 14, weight: .regular)
         }
         .padding(16)
         .background(AppColor.surface)
@@ -123,17 +116,38 @@ struct SettingsView: View {
                 .appFont(size: 12, weight: .medium)
                 .foregroundColor(AppColor.secondaryText)
             Text(value)
-                .appFont(size: 16, weight: .bold)
+                .appFont(size: 18, weight: .bold)
                 .foregroundColor(tint)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(AppColor.background)
+        .background(tint.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
-        )
+    }
+
+    private func settingsSectionHeader(eyebrow: String, title: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(eyebrow)
+                .appFont(size: 13, weight: .bold)
+                .foregroundColor(AppColor.secondaryText)
+
+            Text(title)
+                .appFont(size: 24, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+        }
+    }
+
+    private func statusLine(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+                .appFont(size: 14, weight: .medium)
+                .foregroundColor(AppColor.secondaryText)
+            Spacer()
+            Text(value)
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+        }
+        .padding(.vertical, 2)
     }
 
     private var currentLanguageTitle: String {
@@ -151,7 +165,7 @@ struct AppearanceSettingsView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.success)
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -239,7 +253,7 @@ struct PrivacySettingsView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.success, secondaryTint: AppColor.primary)
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 14) {
@@ -312,7 +326,7 @@ struct LanguageSettingsView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.warning)
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -395,7 +409,7 @@ struct PaywallView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.success)
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
@@ -660,23 +674,32 @@ private struct SettingsRow: View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(accessoryColor.opacity(0.14))
+                    .fill(accessoryColor.opacity(0.1))
                     .frame(width: 44, height: 44)
-                Image(systemName: icon).foregroundColor(accessoryColor)
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(accessoryColor)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).foregroundColor(AppColor.primaryText)
-                Text(subtitle).foregroundColor(AppColor.secondaryText)
+                Text(title)
+                    .appFont(size: 16, weight: .bold)
+                    .foregroundColor(AppColor.primaryText)
+                Text(subtitle)
+                    .appFont(size: 14, weight: .regular)
+                    .foregroundColor(AppColor.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
-            Image(systemName: "chevron.right").foregroundColor(AppColor.secondaryText)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(AppColor.secondaryText.opacity(0.6))
         }
         .padding(16)
         .background(AppColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
+                .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
         )
     }
 }
@@ -688,21 +711,34 @@ private struct SettingsSelectionRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: icon)
-                .foregroundColor(AppColor.primary)
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(AppColor.primary.opacity(0.1))
+                    .frame(width: 40, height: 40)
+
+                Image(systemName: icon)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(AppColor.primary)
+            }
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).foregroundColor(AppColor.primaryText)
-                Text(subtitle).foregroundColor(AppColor.secondaryText)
+                Text(title)
+                    .appFont(size: 16, weight: .bold)
+                    .foregroundColor(AppColor.primaryText)
+                Text(subtitle)
+                    .appFont(size: 14, weight: .regular)
+                    .foregroundColor(AppColor.secondaryText)
             }
             Spacer()
-            Image(systemName: "chevron.up.chevron.down").foregroundColor(AppColor.secondaryText)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(AppColor.secondaryText.opacity(0.7))
         }
         .padding(14)
         .background(AppColor.background)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border, lineWidth: 1)
+                .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
         )
     }
 }

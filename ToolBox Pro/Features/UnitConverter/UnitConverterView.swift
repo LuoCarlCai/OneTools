@@ -13,7 +13,7 @@ struct UnitConverterView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.success, secondaryTint: AppColor.primary)
 
             ScrollView {
                 VStack(spacing: 18) {

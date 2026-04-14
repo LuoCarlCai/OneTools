@@ -22,7 +22,7 @@ struct CalculatorView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.warning)
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
