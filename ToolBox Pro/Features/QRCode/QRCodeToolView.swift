@@ -4,6 +4,7 @@ import CoreImage.CIFilterBuiltins
 import UIKit
 
 struct QRCodeToolView: View {
+    @EnvironmentObject private var purchaseStore: PurchaseStore
     enum Mode: Int {
         case generate = 0
         case scan = 1
@@ -33,8 +34,12 @@ struct QRCodeToolView: View {
     @State private var scanResult = ""
     @State private var isShowingShareSheet = false
     @State private var shareImage: UIImage?
+    @State private var isLocked = false
+    @State private var remainingUses = 0
+    @State private var didConsumeScanTrial = false
     private let context = CIContext()
     private let filter = CIFilter.qrCodeGenerator()
+    private let premiumFeature: PremiumFeature = .qrToolkit
 
     init(initialMode: Mode = .generate) {
         _mode = State(initialValue: initialMode.rawValue)
@@ -45,25 +50,54 @@ struct QRCodeToolView: View {
             AppColor.background.ignoresSafeArea()
 
             VStack(spacing: 18) {
-                modeSummary
-
-                Picker("", selection: $mode) {
-                    Text(AppLocalizer.string("Generate")).tag(0)
-                    Text(AppLocalizer.string("Scan")).tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-
-                if mode == 0 {
-                    generateView
+                if isLocked {
+                    FeatureLockedCard(feature: premiumFeature)
                 } else {
-                    scanView
+                    if !purchaseStore.isProUnlocked && remainingUses > 0 {
+                        TrialUsageBanner(remainingUses: remainingUses)
+                            .padding(.horizontal, 20)
+                    }
+
+                    modeSummary
+
+                    Picker("", selection: $mode) {
+                        Text(AppLocalizer.string("Generate")).tag(0)
+                        Text(AppLocalizer.string("Scan")).tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 20)
+
+                    if mode == 0 {
+                        generateView
+                    } else {
+                        scanView
+                    }
                 }
             }
             .padding(.vertical, 20)
         }
         .navigationTitle(AppLocalizer.string("QR Toolkit"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { refreshAccessState() }
+        .onChange(of: purchaseStore.isProUnlocked) { unlocked in
+            if unlocked {
+                isLocked = false
+                remainingUses = 0
+            } else {
+                refreshAccessState()
+            }
+        }
+        .onChange(of: scanResult) { value in
+            guard !value.isEmpty else { return }
+            guard !didConsumeScanTrial else { return }
+            guard !purchaseStore.isProUnlocked else { return }
+            guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+                refreshAccessState()
+                return
+            }
+            didConsumeScanTrial = true
+            refreshAccessState()
+        }
         .sheet(isPresented: $isShowingShareSheet) {
             ShareSheet(items: shareImage.map { [$0] } ?? [])
         }
@@ -146,6 +180,7 @@ struct QRCodeToolView: View {
 
                     HStack(spacing: 12) {
                         Button(AppLocalizer.string("Save")) {
+                            guard consumeFeatureUseIfNeeded() else { return }
                             if let qrImage {
                                 UIImageWriteToSavedPhotosAlbum(qrImage, nil, nil, nil)
                             }
@@ -161,6 +196,7 @@ struct QRCodeToolView: View {
                         .disabled(qrImage == nil)
 
                         Button(AppLocalizer.string("Share")) {
+                            guard consumeFeatureUseIfNeeded() else { return }
                             shareImage = qrImage
                             isShowingShareSheet = qrImage != nil
                         }
@@ -328,6 +364,26 @@ struct QRCodeToolView: View {
             return nil
         }
         return UIImage(cgImage: cgImage)
+    }
+
+    private func refreshAccessState() {
+        guard !purchaseStore.isProUnlocked else {
+            isLocked = false
+            remainingUses = 0
+            return
+        }
+        isLocked = !purchaseStore.hasAccess(to: premiumFeature)
+        remainingUses = purchaseStore.remainingFreeUses(for: premiumFeature)
+    }
+
+    private func consumeFeatureUseIfNeeded() -> Bool {
+        guard !purchaseStore.isProUnlocked else { return true }
+        guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+            refreshAccessState()
+            return false
+        }
+        refreshAccessState()
+        return true
     }
 }
 

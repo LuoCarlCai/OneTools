@@ -5,6 +5,7 @@ import Speech
 import UIKit
 
 struct VoiceToTextView: View {
+    @EnvironmentObject private var purchaseStore: PurchaseStore
     @StateObject private var recorder = VoiceToTextRecorder()
     @AppStorage("voiceToTextHistory") private var historyStorage = ""
     @AppStorage("saveTranscriptHistoryEnabled") private var saveTranscriptHistoryEnabled = true
@@ -12,6 +13,9 @@ struct VoiceToTextView: View {
     @State private var selectedLanguage: VoiceLanguage = .english
     @State private var copyMessage = ""
     @State private var historyRecords: [TaggedHistoryRecord] = []
+    @State private var isLocked = false
+    @State private var remainingUses = 0
+    private let premiumFeature: PremiumFeature = .voiceToText
 
     var body: some View {
         ZStack {
@@ -19,12 +23,20 @@ struct VoiceToTextView: View {
 
             ScrollView {
                 VStack(spacing: 18) {
-                    introCard
-                    statusOverview
-                    languagePicker
-                    recordButton
-                    transcriptSection
-                    historySection
+                    if isLocked {
+                        FeatureLockedCard(feature: premiumFeature)
+                    } else {
+                        if !purchaseStore.isProUnlocked && remainingUses > 0 {
+                            TrialUsageBanner(remainingUses: remainingUses)
+                        }
+
+                        introCard
+                        statusOverview
+                        languagePicker
+                        recordButton
+                        transcriptSection
+                        historySection
+                    }
                 }
                 .padding(20)
             }
@@ -45,11 +57,24 @@ struct VoiceToTextView: View {
             selectedLanguage = language
             recorder.setLanguage(language)
             historyRecords = HistoryStorage.loadRecords(from: historyStorage)
+            refreshAccessState()
         }
         .onChange(of: historyStorage) { value in
             historyRecords = HistoryStorage.loadRecords(from: value)
         }
-        .onDisappear { recorder.stopRecording(shouldSave: false) }
+        .onChange(of: purchaseStore.isProUnlocked) { unlocked in
+            if unlocked {
+                isLocked = false
+                remainingUses = 0
+            } else {
+                refreshAccessState()
+            }
+        }
+        .onDisappear {
+            recorder.stopRecording(shouldSave: false)
+            recorder.transcript = ""
+            copyMessage = ""
+        }
     }
 
     private var introCard: some View {
@@ -159,8 +184,16 @@ struct VoiceToTextView: View {
     private var transcriptSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text(AppLocalizer.string("Live Transcript"))
-                    .appFont(size: 18, weight: .bold)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(currentTranscript.isEmpty ? AppLocalizer.string("Current Content") : AppLocalizer.string("Current Translated Content"))
+                        .appFont(size: 18, weight: .bold)
+
+                    Text(currentTranscript.isEmpty
+                         ? AppLocalizer.string("Current content will appear here after you start recording.")
+                         : AppLocalizer.string("Current translated text is ready to copy or save."))
+                        .appFont(size: 13, weight: .regular)
+                        .foregroundColor(AppColor.secondaryText)
+                }
                 Spacer()
                 if !currentTranscript.isEmpty {
                     Button(AppLocalizer.string("Clear")) {
@@ -297,6 +330,7 @@ struct VoiceToTextView: View {
                 historyStorage = HistoryStorage.saveRecords(historyRecords)
             }
         } else {
+            guard consumeFeatureUseIfNeeded() else { return }
             recorder.startRecording()
         }
     }
@@ -324,6 +358,26 @@ struct VoiceToTextView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(AppColor.border, lineWidth: 1)
         )
+    }
+
+    private func refreshAccessState() {
+        guard !purchaseStore.isProUnlocked else {
+            isLocked = false
+            remainingUses = 0
+            return
+        }
+        isLocked = !purchaseStore.hasAccess(to: premiumFeature)
+        remainingUses = purchaseStore.remainingFreeUses(for: premiumFeature)
+    }
+
+    private func consumeFeatureUseIfNeeded() -> Bool {
+        guard !purchaseStore.isProUnlocked else { return true }
+        guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+            refreshAccessState()
+            return false
+        }
+        refreshAccessState()
+        return true
     }
 }
 

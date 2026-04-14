@@ -38,7 +38,7 @@ struct SettingsView: View {
                             SettingsRow(
                                 icon: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
                                 title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Unlocked") : AppLocalizer.string("Remove Ads"),
-                                subtitle: purchaseStore.isProUnlocked ? AppLocalizer.string("Restorable on your devices with the same Apple ID") : AppLocalizer.string("One-time purchase with restore support"),
+                                subtitle: purchaseStore.isProUnlocked ? AppLocalizer.string("Restorable on your devices with the same Apple ID") : AppLocalizer.string("Monthly subscription with restore support"),
                                 accessoryColor: purchaseStore.isProUnlocked ? AppColor.success : AppColor.warning
                             )
                         }.buttonStyle(.plain)
@@ -67,13 +67,13 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 settingsChip(
                     title: AppLocalizer.string("Plan"),
-                    value: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro") : AppLocalizer.string("Free"),
+                    value: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Monthly") : AppLocalizer.string("Free"),
                     tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
                 )
                 settingsChip(
-                    title: AppLocalizer.string("Language"),
-                    value: currentLanguageTitle,
-                    tint: AppColor.warning
+                    title: AppLocalizer.string("Subscription"),
+                    value: purchaseStore.subscriptionStatusTitle,
+                    tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.warning
                 )
             }
         }
@@ -99,6 +99,11 @@ struct SettingsView: View {
                 Text(AppLocalizer.string("Build"))
                 Spacer()
                 Text(Bundle.main.buildVersionNumber)
+            }
+            HStack {
+                Text(AppLocalizer.string("Subscription"))
+                Spacer()
+                Text(purchaseStore.subscriptionStatusTitle)
             }
             Text(AppLocalizer.string("Core tools are ready offline for fast daily use."))
                 .foregroundColor(AppColor.secondaryText)
@@ -407,12 +412,12 @@ struct PaywallView: View {
                                     Text(purchaseStore.product?.displayPrice ?? "$4.99")
                                         .appFont(size: 34, weight: .bold)
                                         .foregroundColor(AppColor.primaryText)
-                                    Text(AppLocalizer.string("Lifetime"))
+                                    Text(AppLocalizer.string("Monthly"))
                                         .appFont(size: 16, weight: .medium)
                                         .foregroundColor(AppColor.secondaryText)
                                 }
 
-                                Text(AppLocalizer.string("One-time purchase. Restore on a new phone anytime with the same Apple ID."))
+                                Text(AppLocalizer.string("Auto-renews monthly. Cancel anytime in App Store settings."))
                                     .appFont(size: 14, weight: .regular)
                                     .foregroundColor(AppColor.secondaryText)
                             }
@@ -442,8 +447,9 @@ struct PaywallView: View {
                             .foregroundColor(AppColor.primaryText)
 
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Removes banner ads from core tools"))
-                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Restore anytime with the same Apple ID"))
-                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Keeps the full tool set ready offline"))
+                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Use Pro while your subscription is active"))
+                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Restore anytime with the same Apple ID while active"))
+                        planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("If the subscription expires and does not renew, Pro access ends automatically"))
                     }
                     .padding(16)
                     .background(AppColor.surface)
@@ -456,10 +462,10 @@ struct PaywallView: View {
                     VStack(alignment: .leading, spacing: 14) {
                         HStack(spacing: 12) {
                             benefitCard(title: AppLocalizer.string("Cleaner"), detail: AppLocalizer.string("Focus on tools without banner interruptions."), tint: AppColor.primary)
-                            benefitCard(title: AppLocalizer.string("Restorable"), detail: AppLocalizer.string("Sign in with the same Apple ID on your next device."), tint: AppColor.success)
+                            benefitCard(title: AppLocalizer.string("Restorable"), detail: AppLocalizer.string("Sign in with the same Apple ID to restore your active subscription on a new device."), tint: AppColor.success)
                         }
 
-                        Text(AppLocalizer.string("No account setup required. Purchase once and keep Pro ready whenever you reinstall."))
+                        Text(AppLocalizer.string("No extra account is needed. We check App Store subscription status each time the app starts."))
                             .appFont(size: 14, weight: .regular)
                             .foregroundColor(AppColor.secondaryText)
                     }
@@ -487,7 +493,7 @@ struct PaywallView: View {
                         }
                         .buttonStyle(SettingsActionButtonStyle(color: AppColor.primary))
 
-                        Text(AppLocalizer.string("Already purchased before? Restore takes a moment and keeps your access on the same Apple ID."))
+                        Text(AppLocalizer.string("Already subscribed before? Restore takes a moment and syncs your active subscription on the same Apple ID."))
                             .appFont(size: 13, weight: .regular)
                             .foregroundColor(AppColor.secondaryText)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -536,7 +542,7 @@ struct PaywallView: View {
             }
 
             HStack(spacing: 12) {
-                heroMetric(title: AppLocalizer.string("Access"), value: AppLocalizer.string("Lifetime"))
+                heroMetric(title: AppLocalizer.string("Access"), value: AppLocalizer.string("Monthly"))
                 heroMetric(title: AppLocalizer.string("Restore"), value: AppLocalizer.string("Included"))
             }
         }

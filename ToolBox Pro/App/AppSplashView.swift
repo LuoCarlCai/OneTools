@@ -3,43 +3,40 @@ import SwiftUI
 struct AppSplashView: View {
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            Color(hex: 0xFBFCFE).ignoresSafeArea()
 
-            VStack(spacing: 28) {
-                Image("LaunchArtwork")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 220, height: 220)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .shadow(color: .black.opacity(0.16), radius: 20, x: 0, y: 14)
+            Circle()
+                .fill(Color(hex: 0xFEE58F).opacity(0.48))
+                .frame(width: 144, height: 144)
+                .offset(x: -156, y: -250)
 
-                VStack(spacing: 10) {
-                    Text(AppLocalizer.string("OneTools"))
-                        .appFont(size: 22, weight: .bold)
-                        .foregroundColor(AppColor.primaryText)
+            Circle()
+                .fill(Color(hex: 0xBEF3DE).opacity(0.5))
+                .frame(width: 154, height: 154)
+                .offset(x: 142, y: -262)
 
-                    Text(AppLocalizer.string("Everyday utilities, instantly."))
-                        .appFont(size: 16, weight: .medium)
-                        .foregroundColor(AppColor.secondaryText)
-                }
+            Circle()
+                .fill(Color(hex: 0xF9D8E8).opacity(0.28))
+                .frame(width: 190, height: 190)
+                .offset(x: 146, y: 308)
 
-                HStack(spacing: 10) {
-                    splashBadge(title: AppLocalizer.string("Fast"), tint: AppColor.primary)
-                    splashBadge(title: AppLocalizer.string("Private"), tint: AppColor.success)
-                    splashBadge(title: AppLocalizer.string("Global"), tint: AppColor.warning)
-                }
+            VStack(alignment: .leading, spacing: 18) {
+                Text(AppLocalizer.string("OneTools"))
+                    .appFont(size: 38, weight: .bold)
+                    .foregroundColor(Color(hex: 0x111827))
+
+                Text(AppLocalizer.string("Everyday utilities, instantly."))
+                    .appFont(size: 18, weight: .medium)
+                    .foregroundColor(Color(hex: 0x6B7280))
+
+                Text("ALL-IN-ONE UTILITIES")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(hex: 0x6B7280).opacity(0.8))
+                    .tracking(1.2)
             }
-            .padding(28)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.leading, 24)
+            .padding(.top, 154)
         }
-    }
-
-    private func splashBadge(title: String, tint: Color) -> some View {
-        Text(title)
-            .appFont(size: 13, weight: .bold)
-            .foregroundColor(tint)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(tint.opacity(0.14))
-            .clipShape(Capsule())
     }
 }

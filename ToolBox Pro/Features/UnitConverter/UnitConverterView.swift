@@ -1,10 +1,15 @@
 import SwiftUI
 
 struct UnitConverterView: View {
+    @EnvironmentObject private var purchaseStore: PurchaseStore
     @State private var category = ConversionCategory.all.first!
     @State private var fromUnit = ConversionCategory.all.first!.units.first!
     @State private var toUnit = ConversionCategory.all.first!.units.dropFirst().first!
     @State private var input = "1"
+    @State private var isLocked = false
+    @State private var remainingUses = 0
+    @State private var didConsumeTrialInSession = false
+    private let premiumFeature: PremiumFeature = .unitConverter
 
     var body: some View {
         ZStack {
@@ -12,26 +17,47 @@ struct UnitConverterView: View {
 
             ScrollView {
                 VStack(spacing: 18) {
-                    introCard
-                    Picker("", selection: $category) {
-                        ForEach(ConversionCategory.all) { item in
-                            Text(item.title).tag(item)
+                    if isLocked {
+                        FeatureLockedCard(feature: premiumFeature)
+                    } else {
+                        if !purchaseStore.isProUnlocked && remainingUses > 0 {
+                            TrialUsageBanner(remainingUses: remainingUses)
                         }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: category) { value in
-                        fromUnit = value.units[0]
-                        toUnit = value.units[1]
-                    }
 
-                    categorySummary
-                    converterCard
+                        introCard
+                        Picker("", selection: $category) {
+                            ForEach(ConversionCategory.all) { item in
+                                Text(item.title).tag(item)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: category) { value in
+                            fromUnit = value.units[0]
+                            toUnit = value.units[1]
+                        }
+
+                        categorySummary
+                        converterCard
+                    }
                 }
                 .padding(20)
             }
         }
         .navigationTitle(AppLocalizer.string("Unit Converter"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { refreshAccessState() }
+        .onChange(of: purchaseStore.isProUnlocked) { unlocked in
+            if unlocked {
+                isLocked = false
+                remainingUses = 0
+            } else {
+                refreshAccessState()
+            }
+        }
+        .onChange(of: input) { _ in consumeFeatureUseIfNeeded() }
+        .onChange(of: category) { _ in consumeFeatureUseIfNeeded() }
+        .onChange(of: fromUnit) { _ in consumeFeatureUseIfNeeded() }
+        .onChange(of: toUnit) { _ in consumeFeatureUseIfNeeded() }
     }
 
     private var introCard: some View {
@@ -205,6 +231,27 @@ struct UnitConverterView: View {
         formatter.maximumFractionDigits = 4
         formatter.minimumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    private func refreshAccessState() {
+        guard !purchaseStore.isProUnlocked else {
+            isLocked = false
+            remainingUses = 0
+            return
+        }
+        isLocked = !purchaseStore.hasAccess(to: premiumFeature)
+        remainingUses = purchaseStore.remainingFreeUses(for: premiumFeature)
+    }
+
+    private func consumeFeatureUseIfNeeded() {
+        guard !didConsumeTrialInSession else { return }
+        guard !purchaseStore.isProUnlocked else { return }
+        guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+            refreshAccessState()
+            return
+        }
+        didConsumeTrialInSession = true
+        refreshAccessState()
     }
 }
 

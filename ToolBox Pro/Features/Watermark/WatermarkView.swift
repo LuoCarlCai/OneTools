@@ -4,6 +4,7 @@ import Photos
 import UIKit
 
 struct WatermarkView: View {
+    @EnvironmentObject private var purchaseStore: PurchaseStore
     @State private var selectedImage: UIImage?
     @State private var isShowingPicker = false
     @State private var watermarkText = "OneTools"
@@ -12,6 +13,9 @@ struct WatermarkView: View {
     @State private var rotation = -18.0
     @State private var horizontalPosition = 0.5
     @State private var verticalPosition = 0.5
+    @State private var isLocked = false
+    @State private var remainingUses = 0
+    private let premiumFeature: PremiumFeature = .watermark
 
     var body: some View {
         ZStack {
@@ -19,17 +23,34 @@ struct WatermarkView: View {
 
             ScrollView {
                 VStack(spacing: 18) {
-                    introCard
-                    preview
-                    watermarkSummary
-                    editor
-                    saveButton
+                    if isLocked {
+                        FeatureLockedCard(feature: premiumFeature)
+                    } else {
+                        if !purchaseStore.isProUnlocked && remainingUses > 0 {
+                            TrialUsageBanner(remainingUses: remainingUses)
+                        }
+
+                        introCard
+                        preview
+                        watermarkSummary
+                        editor
+                        saveButton
+                    }
                 }
                 .padding(20)
             }
         }
         .navigationTitle(AppLocalizer.string("Watermark"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { refreshAccessState() }
+        .onChange(of: purchaseStore.isProUnlocked) { unlocked in
+            if unlocked {
+                isLocked = false
+                remainingUses = 0
+            } else {
+                refreshAccessState()
+            }
+        }
         .sheet(isPresented: $isShowingPicker) {
             LegacyImagePicker(image: $selectedImage)
         }
@@ -157,6 +178,7 @@ struct WatermarkView: View {
 
     private var saveButton: some View {
         Button(AppLocalizer.string("Save")) {
+            guard consumeFeatureUseIfNeeded() else { return }
             guard let image = renderedImage() else { return }
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
         }
@@ -210,6 +232,26 @@ struct WatermarkView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(AppColor.border, lineWidth: 1)
         )
+    }
+
+    private func refreshAccessState() {
+        guard !purchaseStore.isProUnlocked else {
+            isLocked = false
+            remainingUses = 0
+            return
+        }
+        isLocked = !purchaseStore.hasAccess(to: premiumFeature)
+        remainingUses = purchaseStore.remainingFreeUses(for: premiumFeature)
+    }
+
+    private func consumeFeatureUseIfNeeded() -> Bool {
+        guard !purchaseStore.isProUnlocked else { return true }
+        guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+            refreshAccessState()
+            return false
+        }
+        refreshAccessState()
+        return true
     }
 }
 

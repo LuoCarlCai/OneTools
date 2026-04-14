@@ -3,6 +3,7 @@ import PhotosUI
 import UIKit
 
 struct ImageCompressorView: View {
+    @EnvironmentObject private var purchaseStore: PurchaseStore
     enum Level: Double, CaseIterable, Identifiable {
         case low = 0.8
         case medium = 0.55
@@ -23,6 +24,9 @@ struct ImageCompressorView: View {
     @State private var level: Level = .medium
     @State private var originalSizeText = "--"
     @State private var compressedSizeText = "--"
+    @State private var isLocked = false
+    @State private var remainingUses = 0
+    private let premiumFeature: PremiumFeature = .compressor
 
     var body: some View {
         ZStack {
@@ -30,16 +34,33 @@ struct ImageCompressorView: View {
 
             ScrollView {
                 VStack(spacing: 18) {
-                    infoCard
-                    preview
-                    sizeSummary
-                    controls
+                    if isLocked {
+                        FeatureLockedCard(feature: premiumFeature)
+                    } else {
+                        if !purchaseStore.isProUnlocked && remainingUses > 0 {
+                            TrialUsageBanner(remainingUses: remainingUses)
+                        }
+
+                        infoCard
+                        preview
+                        sizeSummary
+                        controls
+                    }
                 }
                 .padding(20)
             }
         }
         .navigationTitle(AppLocalizer.string("Compressor"))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { refreshAccessState() }
+        .onChange(of: purchaseStore.isProUnlocked) { unlocked in
+            if unlocked {
+                isLocked = false
+                remainingUses = 0
+            } else {
+                refreshAccessState()
+            }
+        }
         .sheet(isPresented: $isShowingPicker) {
             CompressorImagePicker(image: $selectedImage, originalSizeText: $originalSizeText, compressedImage: $compressedImage, compressedSizeText: $compressedSizeText)
         }
@@ -142,6 +163,7 @@ struct ImageCompressorView: View {
                 .foregroundColor(AppColor.secondaryText)
 
             Button(AppLocalizer.string("Compress")) {
+                guard consumeFeatureUseIfNeeded() else { return }
                 compress()
             }
             .appFont(size: 16, weight: .bold)
@@ -153,6 +175,7 @@ struct ImageCompressorView: View {
             .disabled(selectedImage == nil)
 
             Button(AppLocalizer.string("Save")) {
+                guard consumeFeatureUseIfNeeded() else { return }
                 if let compressedImage {
                     UIImageWriteToSavedPhotosAlbum(compressedImage, nil, nil, nil)
                 }
@@ -208,6 +231,26 @@ struct ImageCompressorView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(AppColor.border, lineWidth: 1)
         )
+    }
+
+    private func refreshAccessState() {
+        guard !purchaseStore.isProUnlocked else {
+            isLocked = false
+            remainingUses = 0
+            return
+        }
+        isLocked = !purchaseStore.hasAccess(to: premiumFeature)
+        remainingUses = purchaseStore.remainingFreeUses(for: premiumFeature)
+    }
+
+    private func consumeFeatureUseIfNeeded() -> Bool {
+        guard !purchaseStore.isProUnlocked else { return true }
+        guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+            refreshAccessState()
+            return false
+        }
+        refreshAccessState()
+        return true
     }
 }
 

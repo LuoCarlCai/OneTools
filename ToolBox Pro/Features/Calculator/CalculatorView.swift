@@ -8,6 +8,9 @@ struct CalculatorView: View {
     @State private var expression = "0"
     @State private var shouldReset = false
     @State private var historyRecords: [TaggedHistoryRecord] = []
+    @State private var isLocked = false
+    @State private var remainingUses = 0
+    private let premiumFeature: PremiumFeature = .calculator
 
     private let rows: [[String]] = [
         ["C", "(", ")", "⌫"],
@@ -23,16 +26,24 @@ struct CalculatorView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
-                    introCard
-                    overviewCards
-                    display
-                    keypad
+                    if isLocked {
+                        FeatureLockedCard(feature: premiumFeature)
+                    } else {
+                        if !purchaseStore.isProUnlocked && remainingUses > 0 {
+                            TrialUsageBanner(remainingUses: remainingUses)
+                        }
 
-                    if !purchaseStore.isProUnlocked {
-                        adPlaceholder
+                        introCard
+                        overviewCards
+                        display
+                        keypad
+
+                        if !purchaseStore.isProUnlocked {
+                            adPlaceholder
+                        }
+
+                        historyPreview
                     }
-
-                    historyPreview
                 }
                 .padding(20)
             }
@@ -49,9 +60,18 @@ struct CalculatorView: View {
         }
         .onAppear {
             historyRecords = HistoryStorage.loadRecords(from: historyStorage)
+            refreshAccessState()
         }
         .onChange(of: historyStorage) { value in
             historyRecords = HistoryStorage.loadRecords(from: value)
+        }
+        .onChange(of: purchaseStore.isProUnlocked) { unlocked in
+            if unlocked {
+                isLocked = false
+                remainingUses = 0
+            } else {
+                refreshAccessState()
+            }
         }
     }
 
@@ -206,7 +226,7 @@ struct CalculatorView: View {
                 .appFont(size: 16, weight: .bold)
                 .foregroundColor(AppColor.primaryText)
 
-            Text(AppLocalizer.string("Remove banner ads across core tools and restore Pro anytime with the same Apple ID."))
+            Text(AppLocalizer.string("Subscribe monthly to remove ads across core tools. Active subscriptions restore automatically on the same Apple ID."))
                 .appFont(size: 14, weight: .regular)
                 .foregroundColor(AppColor.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -275,6 +295,7 @@ struct CalculatorView: View {
     }
 
     private func evaluate() {
+        guard consumeFeatureUseIfNeeded() else { return }
         let sanitized = expression.replacingOccurrences(of: "*", with: "×").replacingOccurrences(of: "/", with: "÷")
         let eval = NSExpression(format: expression)
         if let result = eval.expressionValue(with: nil, context: nil) as? NSNumber {
@@ -294,6 +315,26 @@ struct CalculatorView: View {
         formatter.minimumFractionDigits = 0
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    private func refreshAccessState() {
+        guard !purchaseStore.isProUnlocked else {
+            isLocked = false
+            remainingUses = 0
+            return
+        }
+        isLocked = !purchaseStore.hasAccess(to: premiumFeature)
+        remainingUses = purchaseStore.remainingFreeUses(for: premiumFeature)
+    }
+
+    private func consumeFeatureUseIfNeeded() -> Bool {
+        guard !purchaseStore.isProUnlocked else { return true }
+        guard purchaseStore.consumeFreeUseIfNeeded(for: premiumFeature) else {
+            refreshAccessState()
+            return false
+        }
+        refreshAccessState()
+        return true
     }
 }
 

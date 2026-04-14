@@ -5,7 +5,10 @@ struct HomeView: View {
     @AppStorage("calculatorHistory") private var calculatorHistory = ""
     @AppStorage("voiceToTextHistory") private var voiceToTextHistory = ""
 
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 14)]
+    private let columns = [
+        GridItem(.flexible(), spacing: 14, alignment: .top),
+        GridItem(.flexible(), spacing: 14, alignment: .top)
+    ]
 
     private var tools: [ToolItem] { ToolItem.all }
     private var latestCalculation: TaggedHistoryRecord? { HistoryStorage.loadRecords(from: calculatorHistory).first }
@@ -18,14 +21,16 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     header
-                    featuredStrip
+                    VStack(alignment: .leading, spacing: 14) {
+                        featuredStrip
 
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(tools) { tool in
-                            NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
-                                ToolTile(tool: tool)
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(tools) { tool in
+                                NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
+                                    ToolTile(tool: tool)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
 
@@ -102,7 +107,7 @@ struct HomeView: View {
                         title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Ready") : AppLocalizer.string("Unlock Pro"),
                         detail: purchaseStore.isProUnlocked
                             ? AppLocalizer.string("Your tools stay clean and ad-free across devices.")
-                            : AppLocalizer.string("Restore on a new phone anytime with the same Apple ID."),
+                            : AppLocalizer.string("Monthly Pro restores on your new device with the same Apple ID while active."),
                         symbol: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
                         tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
                     )
@@ -186,7 +191,7 @@ struct HomeView: View {
                 .foregroundColor(AppColor.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168, alignment: .topLeading)
         .padding(16)
         .background(AppColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -251,7 +256,7 @@ private struct ToolTile: View {
                     .lineLimit(3)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 176, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 176, maxHeight: 176, alignment: .topLeading)
         .padding(16)
         .background(AppColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

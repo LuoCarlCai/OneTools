@@ -2,19 +2,60 @@ import Foundation
 import Combine
 import StoreKit
 
+enum PremiumFeature: String, CaseIterable {
+    case calculator
+    case unitConverter
+    case qrToolkit
+    case watermark
+    case compressor
+    case voiceToText
+
+    var title: String {
+        switch self {
+        case .calculator: return AppLocalizer.string("Calculator")
+        case .unitConverter: return AppLocalizer.string("Unit Converter")
+        case .qrToolkit: return AppLocalizer.string("QR Toolkit")
+        case .watermark: return AppLocalizer.string("Watermark")
+        case .compressor: return AppLocalizer.string("Compressor")
+        case .voiceToText: return AppLocalizer.string("Voice to Text")
+        }
+    }
+}
+
+enum ProSubscriptionState {
+    case inactive
+    case active
+}
+
 @MainActor
 final class PurchaseStore: ObservableObject {
-    static let removeAdsLifetimeID = "com.carl.toolboxpro.removeads.lifetime"
+    static let proMonthlyID = "com.carl.toolboxpro.pro.monthly"
+    static let freeUseLimit = 2
+    private static let featureUsageKey = "premiumFeatureUsage"
 
     @Published private(set) var isProUnlocked = false
+    @Published private(set) var subscriptionState: ProSubscriptionState = .inactive
     @Published private(set) var product: Product?
     @Published var statusMessage = ""
+    private var updatesTask: Task<Void, Never>?
 
     init(loadStoreKit: Bool = true) {
         guard loadStoreKit else { return }
+        updatesTask = Task { [weak self] in
+            guard let self else { return }
+            for await update in Transaction.updates {
+                guard case .verified(let transaction) = update else { continue }
+                await transaction.finish()
+                await updateEntitlements()
+            }
+        }
         Task {
             await refresh()
         }
+    }
+
+    deinit {
+        updatesTask?.cancel()
     }
 
     func refresh() async {
@@ -24,7 +65,7 @@ final class PurchaseStore: ObservableObject {
 
     func requestProducts() async {
         do {
-            product = try await Product.products(for: [Self.removeAdsLifetimeID]).first
+            product = try await Product.products(for: [Self.proMonthlyID]).first
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -41,8 +82,8 @@ final class PurchaseStore: ObservableObject {
             switch result {
             case .success(let verification):
                 if case .verified(let transaction) = verification {
-                    isProUnlocked = true
-                    statusMessage = AppLocalizer.string("Pro unlocked successfully.")
+                    await updateEntitlements()
+                    statusMessage = AppLocalizer.string("Subscription is active.")
                     await transaction.finish()
                 } else {
                     statusMessage = AppLocalizer.string("Purchase could not be verified.")
@@ -75,10 +116,54 @@ final class PurchaseStore: ObservableObject {
         var unlocked = false
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result else { continue }
-            if transaction.productID == Self.removeAdsLifetimeID {
+            if transaction.productID == Self.proMonthlyID {
                 unlocked = true
             }
         }
         isProUnlocked = unlocked
+        subscriptionState = unlocked ? .active : .inactive
+    }
+
+    func remainingFreeUses(for feature: PremiumFeature) -> Int {
+        max(0, Self.freeUseLimit - usageCounts()[feature.rawValue, default: 0])
+    }
+
+    func consumeFreeUseIfNeeded(for feature: PremiumFeature) -> Bool {
+        guard !isProUnlocked else { return true }
+
+        var usage = usageCounts()
+        let current = usage[feature.rawValue, default: 0]
+        guard current < Self.freeUseLimit else { return false }
+
+        usage[feature.rawValue] = current + 1
+        saveUsageCounts(usage)
+        objectWillChange.send()
+        return true
+    }
+
+    func hasAccess(to feature: PremiumFeature) -> Bool {
+        isProUnlocked || remainingFreeUses(for: feature) > 0
+    }
+
+    private func usageCounts() -> [String: Int] {
+        guard let data = UserDefaults.standard.data(forKey: Self.featureUsageKey),
+              let decoded = try? JSONDecoder().decode([String: Int].self, from: data) else {
+            return [:]
+        }
+        return decoded
+    }
+
+    private func saveUsageCounts(_ usage: [String: Int]) {
+        guard let data = try? JSONEncoder().encode(usage) else { return }
+        UserDefaults.standard.set(data, forKey: Self.featureUsageKey)
+    }
+
+    var subscriptionStatusTitle: String {
+        switch subscriptionState {
+        case .active:
+            return AppLocalizer.string("Active")
+        case .inactive:
+            return AppLocalizer.string("Inactive")
+        }
     }
 }
