@@ -15,19 +15,35 @@
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-yellow">
                                 <rect key="frame" x="-84" y="108" width="168" height="168"/>
-                                <color key="backgroundColor" red="1" green="0.9058823529" blue="0.6588235294" alpha="0.54" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="1" green="0.9019607843" blue="0.6392156863" alpha="0.82" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="168" id="oyw"/>
+                                    <constraint firstAttribute="height" constant="168" id="oyh"/>
+                                </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-green">
                                 <rect key="frame" x="286" y="84" width="176" height="176"/>
-                                <color key="backgroundColor" red="0.7490196078" green="0.937254902" blue="0.9019607843" alpha="0.76" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="0.8" green="0.9568627451" blue="0.9176470588" alpha="0.92" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="176" id="ogw"/>
+                                    <constraint firstAttribute="height" constant="176" id="ogh"/>
+                                </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-purple">
                                 <rect key="frame" x="226" y="690" width="210" height="210"/>
-                                <color key="backgroundColor" red="0.9058823529" green="0.8588235294" blue="1" alpha="0.44" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="0.9215686275" green="0.8666666667" blue="1" alpha="0.72" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="210" id="opw"/>
+                                    <constraint firstAttribute="height" constant="210" id="oph"/>
+                                </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="accent-line">
                                 <rect key="frame" x="32" y="248" width="1" height="150"/>
                                 <color key="backgroundColor" white="1" alpha="0.72" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="1" id="alw"/>
+                                    <constraint firstAttribute="height" constant="150" id="alh"/>
+                                </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="brand-block">
                                 <rect key="frame" x="32" y="229" width="300" height="134"/>
@@ -47,22 +63,94 @@
                                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
                                         <color key="textColor" red="0.4" green="0.4392156863" blue="0.5215686275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chips-row">
+                                        <rect key="frame" x="0.0" y="123" width="252" height="29"/>
+                                        <subviews>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chip-scan">
+                                                <rect key="frame" x="0.0" y="0.0" width="62" height="29"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="SCAN" textAlignment="center" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chip-scan-label">
+                                                        <rect key="frame" x="12" y="8" width="38" height="13"/>
+                                                        <fontDescription key="fontDescription" type="system" weight="bold" pointSize="11"/>
+                                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    </label>
+                                                </subviews>
+                                                <color key="backgroundColor" red="0.1843137255" green="0.4039215686" blue="0.9647058824" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="62" id="c00"/>
+                                                    <constraint firstAttribute="height" constant="29" id="c00h"/>
+                                                    <constraint firstItem="chip-scan-label" firstAttribute="centerX" secondItem="chip-scan" secondAttribute="centerX" id="c01"/>
+                                                    <constraint firstItem="chip-scan-label" firstAttribute="centerY" secondItem="chip-scan" secondAttribute="centerY" id="c02"/>
+                                                </constraints>
+                                            </view>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chip-convert">
+                                                <rect key="frame" x="70" y="0.0" width="82" height="29"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="CONVERT" textAlignment="center" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chip-convert-label">
+                                                        <rect key="frame" x="11" y="8" width="60" height="13"/>
+                                                        <fontDescription key="fontDescription" type="system" weight="bold" pointSize="11"/>
+                                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    </label>
+                                                </subviews>
+                                                <color key="backgroundColor" red="0.2235294118" green="0.8235294118" blue="0.6235294118" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="82" id="c03w"/>
+                                                    <constraint firstAttribute="height" constant="29" id="c03h"/>
+                                                    <constraint firstItem="chip-convert-label" firstAttribute="centerX" secondItem="chip-convert" secondAttribute="centerX" id="c03"/>
+                                                    <constraint firstItem="chip-convert-label" firstAttribute="centerY" secondItem="chip-convert" secondAttribute="centerY" id="c04"/>
+                                                </constraints>
+                                            </view>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chip-voice">
+                                                <rect key="frame" x="160" y="0.0" width="64" height="29"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="VOICE" textAlignment="center" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chip-voice-label">
+                                                        <rect key="frame" x="11" y="8" width="42" height="13"/>
+                                                        <fontDescription key="fontDescription" type="system" weight="bold" pointSize="11"/>
+                                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    </label>
+                                                </subviews>
+                                                <color key="backgroundColor" red="0.9843137255" green="0.5450980392" blue="0.1411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="64" id="c05w"/>
+                                                    <constraint firstAttribute="height" constant="29" id="c05h"/>
+                                                    <constraint firstItem="chip-voice-label" firstAttribute="centerX" secondItem="chip-voice" secondAttribute="centerX" id="c05"/>
+                                                    <constraint firstItem="chip-voice-label" firstAttribute="centerY" secondItem="chip-voice" secondAttribute="centerY" id="c06"/>
+                                                </constraints>
+                                            </view>
+                                        </subviews>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="252" id="crw"/>
+                                            <constraint firstAttribute="height" constant="29" id="crh"/>
+                                            <constraint firstItem="chip-scan" firstAttribute="leading" secondItem="chips-row" secondAttribute="leading" id="c07"/>
+                                            <constraint firstItem="chip-scan" firstAttribute="top" secondItem="chips-row" secondAttribute="top" id="c08"/>
+                                            <constraint firstItem="chip-scan" firstAttribute="bottom" secondItem="chips-row" secondAttribute="bottom" id="c09"/>
+                                            <constraint firstItem="chip-convert" firstAttribute="leading" secondItem="chip-scan" secondAttribute="trailing" constant="8" id="c10"/>
+                                            <constraint firstItem="chip-convert" firstAttribute="top" secondItem="chips-row" secondAttribute="top" id="c11"/>
+                                            <constraint firstItem="chip-convert" firstAttribute="bottom" secondItem="chips-row" secondAttribute="bottom" id="c12"/>
+                                            <constraint firstItem="chip-voice" firstAttribute="leading" secondItem="chip-convert" secondAttribute="trailing" constant="8" id="c13"/>
+                                            <constraint firstItem="chip-voice" firstAttribute="top" secondItem="chips-row" secondAttribute="top" id="c14"/>
+                                            <constraint firstItem="chip-voice" firstAttribute="bottom" secondItem="chips-row" secondAttribute="bottom" id="c15"/>
+                                        </constraints>
+                                    </view>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="CALCULATE  CONVERT  SCAN  TRANSCRIBE" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="YES" translatesAutoresizingMaskIntoConstraints="NO" id="detail-main">
-                                        <rect key="frame" x="0.0" y="123" width="277" height="14"/>
+                                        <rect key="frame" x="0.0" y="165" width="277" height="14"/>
                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
-                                        <color key="textColor" red="0.5803921569" green="0.6392156863" blue="0.7215686275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <color key="textColor" red="0.5607843137" green="0.6274509804" blue="0.7137254902" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
                                 </subviews>
                                 <constraints>
+                                    <constraint firstAttribute="width" constant="300" id="bbw"/>
                                     <constraint firstItem="eyebrow-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b01"/>
                                     <constraint firstItem="eyebrow-main" firstAttribute="top" secondItem="brand-block" secondAttribute="top" id="b02"/>
                                     <constraint firstItem="title-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b03"/>
                                     <constraint firstItem="title-main" firstAttribute="top" secondItem="eyebrow-main" secondAttribute="bottom" constant="14" id="b04"/>
                                     <constraint firstItem="subtitle-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b05"/>
                                     <constraint firstItem="subtitle-main" firstAttribute="top" secondItem="title-main" secondAttribute="bottom" constant="10" id="b06"/>
-                                    <constraint firstItem="detail-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b07"/>
-                                    <constraint firstItem="detail-main" firstAttribute="top" secondItem="subtitle-main" secondAttribute="bottom" constant="15" id="b08"/>
-                                    <constraint firstAttribute="bottom" secondItem="detail-main" secondAttribute="bottom" id="b09"/>
+                                    <constraint firstItem="chips-row" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b07"/>
+                                    <constraint firstItem="chips-row" firstAttribute="top" secondItem="subtitle-main" secondAttribute="bottom" constant="15" id="b08"/>
+                                    <constraint firstItem="detail-main" firstAttribute="leading" secondItem="brand-block" secondAttribute="leading" id="b09"/>
+                                    <constraint firstItem="detail-main" firstAttribute="top" secondItem="chips-row" secondAttribute="bottom" constant="13" id="b10"/>
+                                    <constraint firstAttribute="bottom" secondItem="detail-main" secondAttribute="bottom" id="b11"/>
                                 </constraints>
                             </view>
                         </subviews>

@@ -12,6 +12,7 @@ struct VoiceToTextView: View {
     @AppStorage("defaultVoiceLanguage") private var defaultVoiceLanguageRawValue = VoiceLanguage.english.rawValue
     @State private var selectedLanguage: VoiceLanguage = .english
     @State private var copyMessage = ""
+    @State private var copyMessageTint = AppColor.success
     @State private var historyRecords: [TaggedHistoryRecord] = []
     @State private var isLocked = false
     @State private var remainingUses = 0
@@ -49,6 +50,7 @@ struct VoiceToTextView: View {
                     Image(systemName: "clock.arrow.circlepath")
                         .foregroundColor(AppColor.primary)
                 }
+                .feedbackOnTap()
             }
         }
         .onChange(of: selectedLanguage) { recorder.setLanguage($0) }
@@ -71,7 +73,7 @@ struct VoiceToTextView: View {
             }
         }
         .onDisappear {
-            recorder.stopRecording(shouldSave: false)
+            recorder.stopRecording(savedToHistory: false)
             recorder.transcript = ""
             copyMessage = ""
         }
@@ -101,7 +103,7 @@ struct VoiceToTextView: View {
         HStack(spacing: 14) {
             overviewChip(title: AppLocalizer.string("Language"), value: selectedLanguage.title, tint: AppColor.primary)
             overviewChip(title: AppLocalizer.string("Status"), value: recorder.isRecording ? AppLocalizer.string("Live") : AppLocalizer.string("Idle"), tint: recorder.isRecording ? AppColor.warning : AppColor.success)
-            overviewChip(title: AppLocalizer.string("History"), value: historyRecords.isEmpty ? AppLocalizer.string("Off") : "\(historyRecords.count)", tint: AppColor.success)
+            overviewChip(title: AppLocalizer.string("History"), value: saveTranscriptHistoryEnabled ? "\(historyRecords.count)" : AppLocalizer.string("Disabled"), tint: AppColor.success)
         }
     }
 
@@ -111,7 +113,10 @@ struct VoiceToTextView: View {
                 .appFont(size: 18, weight: .bold)
             Menu {
                 ForEach(VoiceLanguage.allCases) { language in
-                    Button(language.title) { selectedLanguage = language }
+                    Button(language.title) {
+                        AppFeedback.selection()
+                        selectedLanguage = language
+                    }
                 }
             } label: {
                 HStack(spacing: 12) {
@@ -197,6 +202,7 @@ struct VoiceToTextView: View {
                 Spacer()
                 if !currentTranscript.isEmpty {
                     Button(AppLocalizer.string("Clear")) {
+                        AppFeedback.selection()
                         recorder.transcript = ""
                         copyMessage = ""
                     }
@@ -217,20 +223,18 @@ struct VoiceToTextView: View {
 
                 if !currentTranscript.isEmpty {
                     Button(AppLocalizer.string("Save")) {
-                        guard saveTranscriptHistoryEnabled else { return }
-                        let trimmed = currentTranscript
-                        guard !trimmed.isEmpty else { return }
-                        historyRecords.insert(TaggedHistoryRecord(text: trimmed), at: 0)
-                        historyStorage = HistoryStorage.saveRecords(historyRecords)
-                        copyMessage = AppLocalizer.string("Saved to history.")
+                        if saveCurrentTranscriptIfNeeded(showFeedback: true) {
+                            AppFeedback.success()
+                        }
                     }
                     .buttonStyle(VoiceActionButtonStyle(color: AppColor.success))
+                    .disabled(!saveTranscriptHistoryEnabled || currentTranscript.isEmpty)
                 }
             }
 
             if !copyMessage.isEmpty {
                 Text(copyMessage)
-                    .foregroundColor(AppColor.success)
+                    .foregroundColor(copyMessageTint)
                     .appFont(size: 14, weight: .medium)
             }
         }
@@ -255,14 +259,20 @@ struct VoiceToTextView: View {
                             .appFont(size: 14, weight: .bold)
                             .foregroundColor(AppColor.primary)
                     }
+                    .feedbackOnTap()
                 }
-                Button(AppLocalizer.string("Clear")) { historyStorage = "" }
+                Button(AppLocalizer.string("Clear")) {
+                    AppFeedback.selection()
+                    historyStorage = ""
+                    copyMessage = ""
+                }
                     .disabled(historyRecords.isEmpty)
             }
 
             ForEach(historyRecords.prefix(1)) { item in
                 Button {
                     UIPasteboard.general.string = item.text
+                    AppFeedback.success()
                     copyMessage = AppLocalizer.string("Copied from history.")
                 } label: {
                     HStack(alignment: .top, spacing: 12) {
@@ -324,21 +334,53 @@ struct VoiceToTextView: View {
     private func toggleRecording() {
         copyMessage = ""
         if recorder.isRecording {
-            recorder.stopRecording(shouldSave: true)
-            if saveTranscriptHistoryEnabled, !currentTranscript.isEmpty {
-                historyRecords.insert(TaggedHistoryRecord(text: currentTranscript), at: 0)
-                historyStorage = HistoryStorage.saveRecords(historyRecords)
-            }
+            AppFeedback.warning()
+            let saved = saveCurrentTranscriptIfNeeded(showFeedback: false)
+            recorder.stopRecording(savedToHistory: saved)
         } else {
             guard consumeFeatureUseIfNeeded() else { return }
-            recorder.startRecording()
+            Task {
+                AppFeedback.action()
+                await recorder.startRecording()
+            }
         }
     }
 
     private func copyTranscript() {
         guard !currentTranscript.isEmpty else { return }
         UIPasteboard.general.string = currentTranscript
+        AppFeedback.success()
         copyMessage = AppLocalizer.string("Copied to clipboard.")
+        copyMessageTint = AppColor.success
+    }
+
+    private func saveCurrentTranscriptIfNeeded(showFeedback: Bool) -> Bool {
+        guard saveTranscriptHistoryEnabled else {
+            if showFeedback {
+                copyMessage = AppLocalizer.string("Turn on transcript history in Privacy to save this.")
+                copyMessageTint = AppColor.warning
+            }
+            return false
+        }
+
+        let trimmed = currentTranscript
+        guard !trimmed.isEmpty else { return false }
+
+        if historyRecords.first?.text == trimmed {
+            if showFeedback {
+                copyMessage = AppLocalizer.string("Already saved in history.")
+                copyMessageTint = AppColor.secondaryText
+            }
+            return false
+        }
+
+        historyRecords.insert(TaggedHistoryRecord(text: trimmed), at: 0)
+        historyStorage = HistoryStorage.saveRecords(historyRecords)
+        if showFeedback {
+            copyMessage = AppLocalizer.string("Saved to history.")
+            copyMessageTint = AppColor.success
+        }
+        return true
     }
 
     private func overviewChip(title: String, value: String, tint: Color) -> some View {
@@ -389,7 +431,7 @@ private struct VoiceTranscriptHistoryView: View {
 
     var body: some View {
         ZStack {
-            AppColor.background.ignoresSafeArea()
+            AppPageBackground(primaryTint: Color(hex: 0xEC4899), secondaryTint: AppColor.warning)
 
             ScrollView {
                 VStack(spacing: 14) {
@@ -440,6 +482,7 @@ private struct VoiceTranscriptHistoryView: View {
     private var paginationControls: some View {
         HStack(spacing: 12) {
             Button(AppLocalizer.string("Previous")) {
+                AppFeedback.selection()
                 currentPage = max(currentPage - 1, 0)
             }
             .disabled(currentPage == 0)
@@ -453,6 +496,7 @@ private struct VoiceTranscriptHistoryView: View {
             Spacer()
 
             Button(AppLocalizer.string("Next")) {
+                AppFeedback.selection()
                 currentPage = min(currentPage + 1, totalPages - 1)
             }
             .disabled(currentPage >= totalPages - 1)
@@ -527,12 +571,25 @@ final class VoiceToTextRecorder: NSObject, ObservableObject, SFSpeechRecognizerD
         speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: language.rawValue))
     }
 
-    func startRecording() {
+    func startRecording() async {
         transcript = ""
         statusMessage = AppLocalizer.string("Listening...")
 
-        SFSpeechRecognizer.requestAuthorization { _ in }
-        AVAudioSession.sharedInstance()
+        guard await requestSpeechRecognitionPermission() else {
+            statusMessage = AppLocalizer.string("Speech recognition access is required.")
+            return
+        }
+
+        guard await requestMicrophonePermission() else {
+            statusMessage = AppLocalizer.string("Microphone access is required.")
+            return
+        }
+
+        guard speechRecognizer != nil else {
+            statusMessage = AppLocalizer.string("Voice recognition is unavailable for this language right now.")
+            return
+        }
+
         do {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
@@ -550,7 +607,7 @@ final class VoiceToTextRecorder: NSObject, ObservableObject, SFSpeechRecognizerD
                     self.statusMessage = AppLocalizer.string("Listening...")
                 }
                 if error != nil {
-                    self.stopRecording(shouldSave: false)
+                    self.stopRecording(savedToHistory: false)
                 }
             }
 
@@ -568,7 +625,7 @@ final class VoiceToTextRecorder: NSObject, ObservableObject, SFSpeechRecognizerD
         }
     }
 
-    func stopRecording(shouldSave: Bool) {
+    func stopRecording(savedToHistory: Bool) {
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
@@ -576,6 +633,42 @@ final class VoiceToTextRecorder: NSObject, ObservableObject, SFSpeechRecognizerD
         recognitionTask = nil
         recognitionRequest = nil
         isRecording = false
-        statusMessage = shouldSave ? AppLocalizer.string("Saved to history.") : AppLocalizer.string("Ready")
+        statusMessage = savedToHistory ? AppLocalizer.string("Saved to history.") : AppLocalizer.string("Ready")
+    }
+
+    private func requestSpeechRecognitionPermission() async -> Bool {
+        let currentStatus = SFSpeechRecognizer.authorizationStatus()
+        switch currentStatus {
+        case .authorized:
+            return true
+        case .denied, .restricted:
+            return false
+        case .notDetermined:
+            return await withCheckedContinuation { continuation in
+                SFSpeechRecognizer.requestAuthorization { status in
+                    continuation.resume(returning: status == .authorized)
+                }
+            }
+        @unknown default:
+            return false
+        }
+    }
+
+    private func requestMicrophonePermission() async -> Bool {
+        let audioSession = AVAudioSession.sharedInstance()
+        switch audioSession.recordPermission {
+        case .granted:
+            return true
+        case .denied:
+            return false
+        case .undetermined:
+            return await withCheckedContinuation { continuation in
+                audioSession.requestRecordPermission { granted in
+                    continuation.resume(returning: granted)
+                }
+            }
+        @unknown default:
+            return false
+        }
     }
 }

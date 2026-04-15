@@ -10,9 +10,22 @@
 		F772FA1C2F88D3FD00320564 /* ToolBox Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ToolBox Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F772FCC22F8F381B00320564 /* Exceptions for "ToolBox Pro" folder in "ToolBox Pro" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"ToolBox-Pro-Info.plist",
+			);
+			target = F772FA1B2F88D3FD00320564 /* ToolBox Pro */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F772FA1E2F88D3FD00320564 /* ToolBox Pro */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F772FCC22F8F381B00320564 /* Exceptions for "ToolBox Pro" folder in "ToolBox Pro" target */,
+			);
 			path = "ToolBox Pro";
 			sourceTree = "<group>";
 		};
@@ -251,13 +264,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 100;
-				DEVELOPMENT_TEAM = 4HP2MC94M2;
+				DEVELOPMENT_TEAM = CS52G5Z35S;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ToolBox-Pro-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = OneTools;
 				INFOPLIST_KEY_NSCameraUsageDescription = "OneTools uses the camera only to scan QR codes.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "OneTools uses the microphone only when you start recording for Voice to Text.";
@@ -265,7 +280,6 @@
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "OneTools uses speech recognition to turn your voice into live text.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -275,8 +289,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.1;
 				MARKETING_VERSION = 1.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.carl.ToolBox-Pro";
+				PRODUCT_BUNDLE_IDENTIFIER = com.carlluo.com.onetools;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -297,13 +312,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 100;
-				DEVELOPMENT_TEAM = 4HP2MC94M2;
+				DEVELOPMENT_TEAM = CS52G5Z35S;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ToolBox-Pro-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = OneTools;
 				INFOPLIST_KEY_NSCameraUsageDescription = "OneTools uses the camera only to scan QR codes.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "OneTools uses the microphone only when you start recording for Voice to Text.";
@@ -311,7 +328,6 @@
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "OneTools uses speech recognition to turn your voice into live text.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -321,8 +337,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.1;
 				MARKETING_VERSION = 1.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.carl.ToolBox-Pro";
+				PRODUCT_BUNDLE_IDENTIFIER = com.carlluo.com.onetools;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

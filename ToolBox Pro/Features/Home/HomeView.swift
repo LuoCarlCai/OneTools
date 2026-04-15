@@ -35,6 +35,7 @@ struct HomeView: View {
                                     ToolTile(tool: tool)
                                 }
                                 .buttonStyle(.plain)
+                                .feedbackOnTap()
                             }
                         }
                     }
@@ -55,6 +56,7 @@ struct HomeView: View {
                         .appFont(size: 14, weight: .bold)
                         .foregroundColor(purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary)
                 }
+                .feedbackOnTap()
             }
         }
     }
@@ -98,18 +100,20 @@ struct HomeView: View {
                 )
             }
             .buttonStyle(.plain)
+            .feedbackOnTap(.action)
 
             NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
                 featuredCard(
                     title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Ready") : AppLocalizer.string("Unlock Pro"),
                     detail: purchaseStore.isProUnlocked
                         ? AppLocalizer.string("Your tools stay unlocked and ready across devices.")
-                        : AppLocalizer.string("Monthly Pro restores on your new device with the same Apple ID while active."),
+                        : AppLocalizer.string("Pro restores on your new device with the same Apple ID while your subscription is active."),
                     symbol: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
                     tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
                 )
             }
             .buttonStyle(.plain)
+            .feedbackOnTap(.action)
         }
     }
 

@@ -71,12 +71,14 @@ struct TaggedHistoryRow: View {
 
                 Menu {
                     Button(AppLocalizer.string("Add tag")) {
+                        AppFeedback.selection()
                         draftTag = record.tag
                         isEditorPresented = true
                     }
 
                     if let onDelete {
                         Button(role: .destructive) {
+                            AppFeedback.warning()
                             onDelete()
                         } label: {
                             Text(AppLocalizer.string("Delete"))
@@ -104,6 +106,7 @@ struct TaggedHistoryRow: View {
             VStack(alignment: .leading, spacing: 18) {
                 HStack {
                     Button(AppLocalizer.string("Cancel")) {
+                        AppFeedback.selection()
                         isEditorPresented = false
                     }
                     .foregroundColor(AppColor.secondaryText)
@@ -111,6 +114,7 @@ struct TaggedHistoryRow: View {
                     Spacer()
 
                     Button(AppLocalizer.string("Done")) {
+                        AppFeedback.success()
                         record.tag = draftTag.trimmingCharacters(in: .whitespacesAndNewlines)
                         isEditorPresented = false
                     }
@@ -140,6 +144,7 @@ struct TaggedHistoryRow: View {
                         AppLocalizer.string("Study"),
                         AppLocalizer.string("Personal")
                     ], tint: tint) { selected in
+                        AppFeedback.selection()
                         draftTag = selected
                     }
                 }

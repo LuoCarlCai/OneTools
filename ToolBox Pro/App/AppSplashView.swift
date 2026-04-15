@@ -11,17 +11,17 @@ struct AppSplashView: View {
             .ignoresSafeArea()
 
             Circle()
-                .fill(Color(hex: 0xFFE7A8).opacity(0.54))
+                .fill(Color(hex: 0xFFE6A3).opacity(0.82))
                 .frame(width: 168, height: 168)
                 .offset(x: -156, y: -246)
 
             Circle()
-                .fill(Color(hex: 0xBFEFE6).opacity(0.76))
+                .fill(Color(hex: 0xCCF4EA).opacity(0.92))
                 .frame(width: 176, height: 176)
                 .offset(x: 156, y: -226)
 
             Circle()
-                .fill(Color(hex: 0xE7DBFF).opacity(0.44))
+                .fill(Color(hex: 0xEBDDFF).opacity(0.72))
                 .frame(width: 210, height: 210)
                 .offset(x: 122, y: 316)
 
@@ -46,14 +46,30 @@ struct AppSplashView: View {
                         .foregroundColor(Color(hex: 0x667085))
                 }
 
+                HStack(spacing: 8) {
+                    splashChip(title: AppLocalizer.string("SCAN"), background: Color(hex: 0x2F67F6))
+                    splashChip(title: AppLocalizer.string("CONVERT"), background: Color(hex: 0x39D29F))
+                    splashChip(title: AppLocalizer.string("VOICE"), background: Color(hex: 0xFB8B24))
+                }
+
                 Text(AppLocalizer.string("CALCULATE  CONVERT  SCAN  TRANSCRIBE"))
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(hex: 0x94A3B8))
+                    .foregroundColor(Color(hex: 0x8FA0B6))
                     .tracking(1.4)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.leading, 32)
             .padding(.top, 168)
         }
+    }
+
+    private func splashChip(title: String, background: Color) -> some View {
+        Text(title)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(background)
+            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 }

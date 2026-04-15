@@ -10,7 +10,9 @@ struct ToolBox_ProApp: App {
             "defaultVoiceLanguage": VoiceLanguage.english.rawValue,
             "appAppearance": AppAppearance.system.rawValue,
             "saveCalculatorHistoryEnabled": true,
-            "saveTranscriptHistoryEnabled": true
+            "saveTranscriptHistoryEnabled": true,
+            "feedbackHapticsEnabled": true,
+            "feedbackSoundStyle": AppFeedbackSound.click.rawValue
         ])
     }
 

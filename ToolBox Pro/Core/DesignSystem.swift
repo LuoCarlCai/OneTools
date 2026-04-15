@@ -56,6 +56,21 @@ extension View {
         font(.system(size: size, weight: weight, design: .rounded))
     }
 
+    func feedbackOnTap(_ trigger: AppFeedbackTrigger = .selection) -> some View {
+        simultaneousGesture(
+            TapGesture().onEnded {
+                switch trigger {
+                case .selection:
+                    AppFeedback.selection()
+                case .action:
+                    AppFeedback.action()
+                case .success:
+                    AppFeedback.success()
+                }
+            }
+        )
+    }
+
     @ViewBuilder
     func hidesTabBarOnPush() -> some View {
         if #available(iOS 16.0, *) {
@@ -64,6 +79,12 @@ extension View {
             self
         }
     }
+}
+
+enum AppFeedbackTrigger {
+    case selection
+    case action
+    case success
 }
 
 extension Color {

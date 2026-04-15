@@ -4,6 +4,7 @@ import UIKit
 
 struct ImageCompressorView: View {
     @EnvironmentObject private var purchaseStore: PurchaseStore
+    @StateObject private var photoSaver = PhotoLibrarySaver()
     enum Level: Double, CaseIterable, Identifiable {
         case low = 0.8
         case medium = 0.55
@@ -26,6 +27,9 @@ struct ImageCompressorView: View {
     @State private var compressedSizeText = "--"
     @State private var isLocked = false
     @State private var remainingUses = 0
+    @State private var saveMessage = ""
+    @State private var saveMessageTint = AppColor.success
+    @State private var didConsumeTrialInSession = false
     private let premiumFeature: PremiumFeature = .compressor
 
     var body: some View {
@@ -60,6 +64,13 @@ struct ImageCompressorView: View {
             } else {
                 refreshAccessState()
             }
+        }
+        .onChange(of: selectedImage) { _ in
+            saveMessage = ""
+            didConsumeTrialInSession = false
+        }
+        .onChange(of: compressedImage) { _ in
+            saveMessage = ""
         }
         .sheet(isPresented: $isShowingPicker) {
             CompressorImagePicker(image: $selectedImage, originalSizeText: $originalSizeText, compressedImage: $compressedImage, compressedSizeText: $compressedSizeText)
@@ -101,6 +112,7 @@ struct ImageCompressorView: View {
                     .appFont(size: 18, weight: .bold)
                 Spacer()
                 Button {
+                    AppFeedback.selection()
                     isShowingPicker = true
                 } label: {
                     Text(AppLocalizer.string("Choose"))
@@ -163,7 +175,8 @@ struct ImageCompressorView: View {
                 .foregroundColor(AppColor.secondaryText)
 
             Button(AppLocalizer.string("Compress")) {
-                guard consumeFeatureUseIfNeeded() else { return }
+                guard consumeFeatureUseInSessionIfNeeded() else { return }
+                AppFeedback.action()
                 compress()
             }
             .appFont(size: 16, weight: .bold)
@@ -175,14 +188,31 @@ struct ImageCompressorView: View {
             .disabled(selectedImage == nil)
 
             Button(AppLocalizer.string("Save")) {
-                guard consumeFeatureUseIfNeeded() else { return }
+                guard consumeFeatureUseInSessionIfNeeded() else { return }
                 if let compressedImage {
-                    UIImageWriteToSavedPhotosAlbum(compressedImage, nil, nil, nil)
+                    photoSaver.save(compressedImage) { result in
+                        switch result {
+                        case .success:
+                            AppFeedback.success()
+                            saveMessage = AppLocalizer.string("Saved to Photos.")
+                            saveMessageTint = AppColor.success
+                        case .failure:
+                            saveMessage = AppLocalizer.string("Could not save right now.")
+                            saveMessageTint = AppColor.warning
+                        }
+                    }
                 }
             }
             .appFont(size: 15, weight: .bold)
             .foregroundColor(AppColor.primary)
             .disabled(compressedImage == nil)
+
+            if !saveMessage.isEmpty {
+                Text(saveMessage)
+                    .appFont(size: 13, weight: .medium)
+                    .foregroundColor(saveMessageTint)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(16)
         .background(AppColor.surface)
@@ -250,6 +280,13 @@ struct ImageCompressorView: View {
             return false
         }
         refreshAccessState()
+        return true
+    }
+
+    private func consumeFeatureUseInSessionIfNeeded() -> Bool {
+        guard !didConsumeTrialInSession else { return true }
+        guard consumeFeatureUseIfNeeded() else { return false }
+        didConsumeTrialInSession = true
         return true
     }
 }

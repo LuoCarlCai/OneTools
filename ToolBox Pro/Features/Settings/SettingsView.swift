@@ -20,14 +20,22 @@ struct SettingsView: View {
                         NavigationLink(destination: AppearanceSettingsView().hidesTabBarOnPush()) {
                             SettingsRow(icon: "paintbrush", title: AppLocalizer.string("Appearance"), subtitle: AppLocalizer.string("Theme, contrast, and preview"))
                         }.buttonStyle(.plain)
+                            .feedbackOnTap()
 
                         NavigationLink(destination: PrivacySettingsView().hidesTabBarOnPush()) {
                             SettingsRow(icon: "lock.shield", title: AppLocalizer.string("Privacy"), subtitle: AppLocalizer.string("History controls and local data cleanup"))
                         }.buttonStyle(.plain)
+                            .feedbackOnTap()
 
                         NavigationLink(destination: LanguageSettingsView().hidesTabBarOnPush()) {
                             SettingsRow(icon: "globe", title: AppLocalizer.string("Language"), subtitle: AppLocalizer.string("Interface preference and voice defaults"))
                         }.buttonStyle(.plain)
+                            .feedbackOnTap()
+
+                        NavigationLink(destination: FeedbackSettingsView().hidesTabBarOnPush()) {
+                            SettingsRow(icon: "waveform.path", title: AppLocalizer.string("Feedback"), subtitle: AppLocalizer.string("Haptics and tap sounds"))
+                        }.buttonStyle(.plain)
+                            .feedbackOnTap()
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -40,10 +48,11 @@ struct SettingsView: View {
                             SettingsRow(
                                 icon: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
                                 title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Unlocked") : AppLocalizer.string("Go Pro"),
-                                subtitle: purchaseStore.isProUnlocked ? AppLocalizer.string("Restorable on your devices with the same Apple ID") : AppLocalizer.string("Monthly subscription with restore support"),
+                                subtitle: purchaseStore.isProUnlocked ? AppLocalizer.string("Restorable on your devices with the same Apple ID") : AppLocalizer.string("Flexible subscription plans with restore support"),
                                 accessoryColor: purchaseStore.isProUnlocked ? AppColor.success : AppColor.warning
                             )
                         }.buttonStyle(.plain)
+                            .feedbackOnTap(.action)
                     }
 
                     settingsStatusCard
@@ -74,7 +83,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 settingsChip(
                     title: AppLocalizer.string("Plan"),
-                    value: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Monthly") : AppLocalizer.string("Free"),
+                    value: purchaseStore.isProUnlocked ? (purchaseStore.activePlan?.displayName ?? AppLocalizer.string("Pro Monthly")) : AppLocalizer.string("Free"),
                     tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
                 )
                 settingsChip(
@@ -279,10 +288,18 @@ struct PrivacySettingsView: View {
                             .appFont(size: 14, weight: .regular)
                             .foregroundColor(AppColor.secondaryText)
 
-                        Button(AppLocalizer.string("Clear calculator history")) { calculatorHistory = "" }
+                        Button(AppLocalizer.string("Clear calculator history")) {
+                            AppFeedback.selection()
+                            calculatorHistory = ""
+                        }
                             .buttonStyle(SettingsActionButtonStyle(color: AppColor.primary))
-                        Button(AppLocalizer.string("Clear transcript history")) { voiceToTextHistory = "" }
+                            .disabled(calculatorHistory.isEmpty)
+                        Button(AppLocalizer.string("Clear transcript history")) {
+                            AppFeedback.selection()
+                            voiceToTextHistory = ""
+                        }
                             .buttonStyle(SettingsActionButtonStyle(color: AppColor.warning))
+                            .disabled(voiceToTextHistory.isEmpty)
                     }
                     .padding(16)
                     .background(AppColor.surface)
@@ -336,7 +353,10 @@ struct LanguageSettingsView: View {
 
                         Menu {
                             ForEach(InterfaceLanguage.allCases) { language in
-                                Button(language.title) { preferredInterfaceLanguage = language.rawValue }
+                                Button(language.title) {
+                                    AppFeedback.selection()
+                                    preferredInterfaceLanguage = language.rawValue
+                                }
                             }
                         } label: {
                             SettingsSelectionRow(icon: "character.book.closed", title: selectedInterfaceLanguage.title, subtitle: interfaceLanguageSubtitle)
@@ -357,7 +377,10 @@ struct LanguageSettingsView: View {
 
                         Menu {
                             ForEach(VoiceLanguage.allCases) { language in
-                                Button(language.title) { defaultVoiceLanguage = language.rawValue }
+                                Button(language.title) {
+                                    AppFeedback.selection()
+                                    defaultVoiceLanguage = language.rawValue
+                                }
                             }
                         } label: {
                             SettingsSelectionRow(icon: "waveform.badge.mic", title: selectedVoiceLanguage.title, subtitle: AppLocalizer.string("Used as the default language when you open Voice to Text."))
@@ -404,8 +427,91 @@ struct LanguageSettingsView: View {
     }
 }
 
+struct FeedbackSettingsView: View {
+    @AppStorage("feedbackHapticsEnabled") private var hapticsEnabled = true
+    @AppStorage("feedbackSoundStyle") private var feedbackSoundStyle = AppFeedbackSound.click.rawValue
+
+    private var selectedSound: AppFeedbackSound {
+        AppFeedbackSound(rawValue: feedbackSoundStyle) ?? .click
+    }
+
+    var body: some View {
+        ZStack {
+            AppPageBackground(primaryTint: AppColor.warning, secondaryTint: AppColor.primary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(AppLocalizer.string("Touch Feedback"))
+                            .appFont(size: 18, weight: .bold)
+                            .foregroundColor(AppColor.primaryText)
+
+                        Toggle(AppLocalizer.string("Haptic Feedback"), isOn: $hapticsEnabled)
+                            .tint(AppColor.primary)
+                            .onChange(of: hapticsEnabled) { enabled in
+                                AppFeedback.hapticsEnabled = enabled
+                                AppFeedback.selection()
+                            }
+
+                        Text(AppLocalizer.string("Adds a light tap response to key actions across the app."))
+                            .appFont(size: 14, weight: .regular)
+                            .foregroundColor(AppColor.secondaryText)
+                    }
+                    .padding(16)
+                    .background(AppColor.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(AppLocalizer.string("Tap Sound"))
+                            .appFont(size: 18, weight: .bold)
+                            .foregroundColor(AppColor.primaryText)
+
+                        Menu {
+                            ForEach(AppFeedbackSound.allCases) { sound in
+                                Button(sound.title) {
+                                    feedbackSoundStyle = sound.rawValue
+                                    AppFeedback.soundStyle = sound
+                                    AppFeedback.selection()
+                                }
+                            }
+                        } label: {
+                            SettingsSelectionRow(
+                                icon: "speaker.wave.2.fill",
+                                title: selectedSound.title,
+                                subtitle: AppLocalizer.string("Choose the sound style for taps and actions.")
+                            )
+                        }
+
+                        HStack(spacing: 12) {
+                            Button(AppLocalizer.string("Preview Haptic")) {
+                                AppFeedback.action()
+                            }
+                            .buttonStyle(SettingsActionButtonStyle(color: AppColor.primary))
+
+                            Button(AppLocalizer.string("Preview Sound")) {
+                                AppFeedback.selection()
+                            }
+                            .buttonStyle(SettingsActionButtonStyle(color: AppColor.warning))
+                        }
+                    }
+                    .padding(16)
+                    .background(AppColor.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .padding(20)
+            }
+        }
+        .navigationTitle(AppLocalizer.string("Feedback"))
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AppFeedback.hapticsEnabled = hapticsEnabled
+            AppFeedback.soundStyle = selectedSound
+        }
+    }
+}
+
 struct PaywallView: View {
     @EnvironmentObject private var purchaseStore: PurchaseStore
+    @State private var selectedPlan: ProPlan = .monthly
 
     var body: some View {
         ZStack {
@@ -420,30 +526,57 @@ struct PaywallView: View {
                             .appFont(size: 18, weight: .bold)
                             .foregroundColor(AppColor.primaryText)
 
+                        HStack(spacing: 10) {
+                            ForEach(ProPlan.allCases) { plan in
+                                Button {
+                                    AppFeedback.selection()
+                                    selectedPlan = plan
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(plan.title)
+                                            .appFont(size: 14, weight: .bold)
+                                            .foregroundColor(selectedPlan == plan ? .white : AppColor.primaryText)
+                                        Text(purchaseStore.priceText(for: plan))
+                                            .appFont(size: 20, weight: .bold)
+                                            .foregroundColor(selectedPlan == plan ? .white : AppColor.primary)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(14)
+                                    .background(selectedPlan == plan ? AppColor.primary : AppColor.background)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .stroke(selectedPlan == plan ? AppColor.primary : AppColor.border, lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
                         HStack(alignment: .center, spacing: 12) {
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack(alignment: .lastTextBaseline, spacing: 8) {
-                                    Text(purchaseStore.product?.displayPrice ?? "$4.99")
+                                    Text(purchaseStore.priceText(for: selectedPlan))
                                         .appFont(size: 34, weight: .bold)
                                         .foregroundColor(AppColor.primaryText)
-                                    Text(AppLocalizer.string("Monthly"))
+                                    Text(selectedPlan.title)
                                         .appFont(size: 16, weight: .medium)
                                         .foregroundColor(AppColor.secondaryText)
                                 }
 
-                                Text(AppLocalizer.string("Auto-renews monthly. Cancel anytime in App Store settings."))
+                                Text(selectedPlan.subtitle)
                                     .appFont(size: 14, weight: .regular)
                                     .foregroundColor(AppColor.secondaryText)
                             }
 
                             Spacer()
 
-                            Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Active") : AppLocalizer.string("Best Value"))
+                            Text(purchaseStore.isProUnlocked && purchaseStore.activePlan == selectedPlan ? AppLocalizer.string("Active") : (selectedPlan == .yearly ? AppLocalizer.string("Best Value") : AppLocalizer.string("Popular")))
                                 .appFont(size: 12, weight: .bold)
-                                .foregroundColor(purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary)
+                                .foregroundColor(purchaseStore.isProUnlocked && purchaseStore.activePlan == selectedPlan ? AppColor.success : AppColor.primary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background((purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary).opacity(0.14))
+                                .background(((purchaseStore.isProUnlocked && purchaseStore.activePlan == selectedPlan) ? AppColor.success : AppColor.primary).opacity(0.14))
                                 .clipShape(Capsule())
                         }
                     }
@@ -464,6 +597,9 @@ struct PaywallView: View {
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Use Pro while your subscription is active"))
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Restore anytime with the same Apple ID while active"))
                         planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("If the subscription expires and does not renew, Pro access ends automatically"))
+                        if selectedPlan == .yearly {
+                            planFeatureRow(symbol: "checkmark.circle.fill", text: AppLocalizer.string("Save around 15%% compared with paying monthly"))
+                        }
                     }
                     .padding(16)
                     .background(AppColor.surface)
@@ -491,42 +627,77 @@ struct PaywallView: View {
                             .stroke(AppColor.border, lineWidth: 1)
                     )
 
-                    VStack(spacing: 12) {
-                        Button(AppLocalizer.string("Unlock Pro")) {
-                            Task { await purchaseStore.buy() }
-                        }
-                        .appFont(size: 16, weight: .bold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(AppColor.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-                        Button(AppLocalizer.string("Restore Purchases")) {
-                            Task { await purchaseStore.restorePurchases() }
-                        }
-                        .buttonStyle(SettingsActionButtonStyle(color: AppColor.primary))
-
-                        Text(AppLocalizer.string("Already subscribed before? Restore takes a moment and syncs your active subscription on the same Apple ID."))
-                            .appFont(size: 13, weight: .regular)
-                            .foregroundColor(AppColor.secondaryText)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                    if shouldShowStoreKitDiagnostics {
+                        storeKitDiagnosticsCard
                     }
-
-                    if !purchaseStore.statusMessage.isEmpty {
-                        Text(purchaseStore.statusMessage)
-                            .foregroundColor(AppColor.secondaryText)
-                            .appFont(size: 14, weight: .medium)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
-
-                    Spacer(minLength: 10)
                 }
                 .padding(20)
+                .padding(.bottom, 25)
             }
         }
         .navigationTitle(AppLocalizer.string("OneTools Pro"))
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            bottomPurchaseBar
+        }
+        .task {
+            await purchaseStore.refresh()
+            if purchaseStore.products[.yearly] != nil {
+                selectedPlan = purchaseStore.activePlan ?? .yearly
+            }
+        }
+    }
+
+    private var bottomPurchaseBar: some View {
+        VStack(spacing: 12) {
+            Button(purchaseStore.isProUnlocked && purchaseStore.activePlan == selectedPlan ? AppLocalizer.string("Pro Is Active") : (purchaseStore.isLoadingProducts ? AppLocalizer.string("Loading...") : AppLocalizer.string("Unlock Pro"))) {
+                AppFeedback.action()
+                Task {
+                    if purchaseStore.products[selectedPlan] == nil {
+                        await purchaseStore.handleBuyTapWhileUnavailable(for: selectedPlan)
+                    } else {
+                        await purchaseStore.buy(plan: selectedPlan)
+                    }
+                }
+            }
+            .appFont(size: 16, weight: .bold)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background((purchaseStore.isProUnlocked && purchaseStore.activePlan == selectedPlan) ? AppColor.success : AppColor.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .disabled((purchaseStore.isProUnlocked && purchaseStore.activePlan == selectedPlan) || purchaseStore.isProcessingPurchase)
+
+            HStack(spacing: 12) {
+                Button(AppLocalizer.string("Restore Purchases")) {
+                    AppFeedback.selection()
+                    Task { await purchaseStore.restorePurchases() }
+                }
+                .buttonStyle(SettingsActionButtonStyle(color: AppColor.primary))
+                .disabled(purchaseStore.isProcessingPurchase)
+
+                Text(AppLocalizer.string("Already subscribed before? Restore takes a moment and syncs your active subscription on the same Apple ID."))
+                    .appFont(size: 12, weight: .regular)
+                    .foregroundColor(AppColor.secondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            if !purchaseStore.statusMessage.isEmpty {
+                Text(purchaseStore.statusMessage)
+                    .foregroundColor(AppColor.secondaryText)
+                    .appFont(size: 13, weight: .medium)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 14)
+        .padding(.bottom, 10)
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(AppColor.border)
+                .frame(height: 1)
+        }
     }
 
     private var paywallHero: some View {
@@ -556,7 +727,7 @@ struct PaywallView: View {
             }
 
             HStack(spacing: 12) {
-                heroMetric(title: AppLocalizer.string("Access"), value: AppLocalizer.string("Monthly"))
+                heroMetric(title: AppLocalizer.string("Access"), value: purchaseStore.activePlan?.title ?? selectedPlan.title)
                 heroMetric(title: AppLocalizer.string("Restore"), value: AppLocalizer.string("Included"))
             }
         }
@@ -569,6 +740,49 @@ struct PaywallView: View {
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    private var shouldShowStoreKitDiagnostics: Bool {
+        purchaseStore.isLoadingProducts || purchaseStore.products.isEmpty || !purchaseStore.statusMessage.isEmpty
+    }
+
+    private var storeKitDiagnosticsCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(AppLocalizer.string("StoreKit Check"))
+                .appFont(size: 18, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+
+            Text(AppLocalizer.string("Use this to confirm the current app record and whether each plan is being returned by Apple."))
+                .appFont(size: 14, weight: .regular)
+                .foregroundColor(AppColor.secondaryText)
+
+            diagnosticLine(title: AppLocalizer.string("Bundle ID"), value: Bundle.main.bundleIdentifier ?? AppLocalizer.string("Unknown"))
+            diagnosticLine(title: AppLocalizer.string("Monthly"), value: purchaseStore.products[.monthly] != nil ? AppLocalizer.string("Loaded") : (purchaseStore.isLoadingProducts ? AppLocalizer.string("Loading...") : AppLocalizer.string("Unavailable")))
+            diagnosticLine(title: AppLocalizer.string("Yearly"), value: purchaseStore.products[.yearly] != nil ? AppLocalizer.string("Loaded") : (purchaseStore.isLoadingProducts ? AppLocalizer.string("Loading...") : AppLocalizer.string("Unavailable")))
+
+            if !purchaseStore.statusMessage.isEmpty {
+                diagnosticLine(title: AppLocalizer.string("Status"), value: purchaseStore.statusMessage)
+            }
+        }
+        .padding(16)
+        .background(AppColor.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppColor.border, lineWidth: 1)
+        )
+    }
+
+    private func diagnosticLine(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .appFont(size: 12, weight: .bold)
+                .foregroundColor(AppColor.secondaryText)
+            Text(value)
+                .appFont(size: 14, weight: .medium)
+                .foregroundColor(AppColor.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func heroMetric(title: String, value: String) -> some View {

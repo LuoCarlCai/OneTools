@@ -132,9 +132,10 @@ struct UnitConverterView: View {
             VStack(spacing: 12) {
                 conversionUnitCard(title: AppLocalizer.string("From"), unit: $fromUnit)
 
-                Button {
-                    swap(&fromUnit, &toUnit)
-                } label: {
+                        Button {
+                            AppFeedback.selection()
+                            swap(&fromUnit, &toUnit)
+                        } label: {
                     Label(AppLocalizer.string("Swap"), systemImage: "arrow.up.arrow.down")
                         .appFont(size: 15, weight: .bold)
                         .foregroundColor(AppColor.primary)
