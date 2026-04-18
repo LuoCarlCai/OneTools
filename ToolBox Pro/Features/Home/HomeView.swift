@@ -5,115 +5,229 @@ struct HomeView: View {
     @AppStorage("calculatorHistory") private var calculatorHistory = ""
     @AppStorage("voiceToTextHistory") private var voiceToTextHistory = ""
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 14, alignment: .top),
-        GridItem(.flexible(), spacing: 14, alignment: .top)
-    ]
-
     private var tools: [ToolItem] { ToolItem.all }
+    private var primaryTools: [ToolItem] { Array(tools.prefix(3)) }
+    private var secondaryTools: [ToolItem] { Array(tools.dropFirst(3)) }
     private var latestCalculation: TaggedHistoryRecord? { HistoryStorage.loadRecords(from: calculatorHistory).first }
     private var latestTranscript: TaggedHistoryRecord? { HistoryStorage.loadRecords(from: voiceToTextHistory).first }
 
     var body: some View {
         ZStack {
-            AppPageBackground(primaryTint: AppColor.primary, secondaryTint: AppColor.success)
+            HomeBackground()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    header
-                    VStack(alignment: .leading, spacing: 14) {
-                        sectionHeader(
-                            eyebrow: AppLocalizer.string("Start Here"),
-                            title: AppLocalizer.string("Jump back into what matters")
-                        )
-
-                        featuredStrip
-
-                        LazyVGrid(columns: columns, spacing: 14) {
-                            ForEach(tools) { tool in
-                                NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
-                                    ToolTile(tool: tool)
-                                }
-                                .buttonStyle(.plain)
-                                .feedbackOnTap()
-                            }
-                        }
-                    }
-
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 30) {
+                    editorialHeader
+                    spotlightSection
+                    quickLaunchSection
+                    primaryCollectionSection
+                    utilityCollectionSection
                     recentActivitySection
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 18)
-                .padding(.bottom, 28)
+                .padding(.top, 20)
+                .padding(.bottom, 30)
             }
         }
         .navigationTitle(AppLocalizer.string("Tools"))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
-                    Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Pro") : AppLocalizer.string("Go Pro"))
-                        .appFont(size: 14, weight: .bold)
-                        .foregroundColor(purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary)
-                }
-                .feedbackOnTap()
-            }
-        }
+        // In-app purchase entry is temporarily hidden.
+        // .toolbar {
+        //     ToolbarItem(placement: .navigationBarTrailing) {
+        //         NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
+        //             Text(purchaseStore.isProUnlocked ? AppLocalizer.string("Pro") : AppLocalizer.string("Go Pro"))
+        //                 .appFont(size: 14, weight: .bold)
+        //                 .foregroundColor(purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary)
+        //         }
+        //         .feedbackOnTap()
+        //     }
+        // }
     }
 
-    private var header: some View {
+    private var editorialHeader: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(AppLocalizer.string("ONE PLACE, DAILY TOOLS"))
+            HStack(spacing: 10) {
+                Text(AppLocalizer.string("One Tools"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(AppColor.secondaryText)
                     .tracking(1.4)
 
-                Text(AppLocalizer.string("OneTools"))
-                    .appFont(size: 34, weight: .bold)
-                    .foregroundColor(AppColor.primaryText)
+                Circle()
+                    .fill(AppColor.success.opacity(0.7))
+                    .frame(width: 5, height: 5)
 
-                Text(AppLocalizer.string("Calculate, convert, scan, watermark, compress, and transcribe in one calm workspace."))
-                    .appFont(size: 17, weight: .medium)
+                // Purchase-status copy is temporarily hidden.
+                Text(AppLocalizer.string("Daily utilities"))
+                    .appFont(size: 12, weight: .medium)
                     .foregroundColor(AppColor.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                HStack(spacing: 10) {
-                    BadgeView(title: AppLocalizer.string("Fast"), color: AppColor.primary)
-                    BadgeView(title: AppLocalizer.string("Private"), color: AppColor.success)
-                    BadgeView(title: AppLocalizer.string("Global"), color: AppColor.warning)
-                }
             }
 
-            quickStats
+            Text(AppLocalizer.string("Your everyday tools, in one place"))
+                .appFont(size: 32, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(AppLocalizer.string("Open calculator, converter, QR scan, and voice tools without jumping between apps."))
+                .appFont(size: 16, weight: .medium)
+                .foregroundColor(AppColor.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    private var featuredStrip: some View {
-        HStack(spacing: 14) {
-            NavigationLink(destination: QRCodeToolView(initialMode: .scan).hidesTabBarOnPush()) {
-                featuredCard(
-                    title: AppLocalizer.string("Quick Scan"),
-                    detail: AppLocalizer.string("Open QR Toolkit to scan links, Wi-Fi, and notes in seconds."),
-                    symbol: "qrcode.viewfinder",
-                    tint: AppColor.warning
-                )
-            }
-            .buttonStyle(.plain)
-            .feedbackOnTap(.action)
+    private var spotlightSection: some View {
+        NavigationLink(destination: QRCodeToolView(initialMode: .scan).hidesTabBarOnPush()) {
+            ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.dynamic(light: 0x18212F, dark: 0x162033),
+                                Color.dynamic(light: 0x21304A, dark: 0x1E2E49),
+                                Color.dynamic(light: 0x172132, dark: 0x111827)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
 
-            NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
-                featuredCard(
-                    title: purchaseStore.isProUnlocked ? AppLocalizer.string("Pro Ready") : AppLocalizer.string("Unlock Pro"),
-                    detail: purchaseStore.isProUnlocked
-                        ? AppLocalizer.string("Your tools stay unlocked and ready across devices.")
-                        : AppLocalizer.string("Pro restores on your new device with the same Apple ID while your subscription is active."),
-                    symbol: purchaseStore.isProUnlocked ? "checkmark.seal.fill" : "sparkles",
-                    tint: purchaseStore.isProUnlocked ? AppColor.success : AppColor.primary
-                )
+                Circle()
+                    .fill(AppColor.warning.opacity(0.18))
+                    .frame(width: 180, height: 180)
+                    .blur(radius: 4)
+                    .offset(x: 160, y: -10)
+
+                Circle()
+                    .fill(AppColor.primary.opacity(0.20))
+                    .frame(width: 220, height: 220)
+                    .blur(radius: 4)
+                    .offset(x: -30, y: 110)
+
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack {
+                        Text(AppLocalizer.string("Featured"))
+                            .appFont(size: 12, weight: .bold)
+                            .foregroundColor(.white.opacity(0.72))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(.white.opacity(0.10))
+                            .clipShape(Capsule())
+
+                        Spacer()
+
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white.opacity(0.72))
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(AppLocalizer.string("Scan QR codes"))
+                            .appFont(size: 28, weight: .bold)
+                            .foregroundColor(.white)
+
+                        Text(AppLocalizer.string("Open the scanner for links, Wi-Fi, and quick sharing without extra steps."))
+                            .appFont(size: 15, weight: .medium)
+                            .foregroundColor(.white.opacity(0.78))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    HStack(spacing: 10) {
+                        HeroMetric(title: AppLocalizer.string("Use"), value: AppLocalizer.string("Fast access"))
+                        HeroMetric(title: AppLocalizer.string("Tool"), value: AppLocalizer.string("Scanner"))
+                    }
+                }
+                .padding(20)
             }
-            .buttonStyle(.plain)
-            .feedbackOnTap(.action)
+            .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+        }
+        .buttonStyle(.plain)
+        .feedbackOnTap(.action)
+    }
+
+    private var quickLaunchSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader(
+                eyebrow: AppLocalizer.string("Quick Launch"),
+                title: AppLocalizer.string("Use most often")
+            )
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    NavigationLink(destination: CalculatorView().hidesTabBarOnPush()) {
+                        QuickLaunchCard(
+                            eyebrow: AppLocalizer.string("Quick math"),
+                            title: AppLocalizer.string("Calculator"),
+                            detail: AppLocalizer.string("Totals, discounts, and quick math"),
+                            symbol: "plus.forwardslash.minus",
+                            tint: AppColor.primary
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .feedbackOnTap()
+
+                    NavigationLink(destination: UnitConverterView().hidesTabBarOnPush()) {
+                        QuickLaunchCard(
+                            eyebrow: AppLocalizer.string("Global units"),
+                            title: AppLocalizer.string("Convert"),
+                            detail: AppLocalizer.string("Length, weight, time, and more"),
+                            symbol: "arrow.left.arrow.right",
+                            tint: AppColor.success
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .feedbackOnTap()
+
+                    NavigationLink(destination: VoiceToTextView().hidesTabBarOnPush()) {
+                        QuickLaunchCard(
+                            eyebrow: AppLocalizer.string("Transcribe audio"),
+                            title: AppLocalizer.string("Transcribe"),
+                            detail: AppLocalizer.string("Turn speech into editable text"),
+                            symbol: "waveform",
+                            tint: Color(hex: 0xF15B6C)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .feedbackOnTap()
+                }
+                .padding(.horizontal, 1)
+            }
+        }
+    }
+
+    private var primaryCollectionSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader(
+                eyebrow: AppLocalizer.string("Core Tools"),
+                title: AppLocalizer.string("Main tools")
+            )
+
+            VStack(spacing: 12) {
+                ForEach(primaryTools) { tool in
+                    NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
+                        HomeListCard(tool: tool)
+                    }
+                    .buttonStyle(.plain)
+                    .feedbackOnTap()
+                }
+            }
+        }
+    }
+
+    private var utilityCollectionSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader(
+                eyebrow: AppLocalizer.string("Create & Export"),
+                title: AppLocalizer.string("Save and share")
+            )
+
+            HStack(alignment: .top, spacing: 12) {
+                ForEach(secondaryTools) { tool in
+                    NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
+                        CompactToolCard(tool: tool)
+                    }
+                    .buttonStyle(.plain)
+                    .feedbackOnTap()
+                }
+            }
         }
     }
 
@@ -121,108 +235,62 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeader(
                 eyebrow: AppLocalizer.string("Recent Activity"),
-                title: AppLocalizer.string("Pick up where you left off")
+                title: AppLocalizer.string("Recent items")
             )
 
-            if let calc = latestCalculation, !calc.text.isEmpty {
-                RecentActivityCard(title: AppLocalizer.string("Last Calculation"), value: calc.text, color: AppColor.primary, symbol: "plus.forwardslash.minus")
-            }
+            VStack(spacing: 10) {
+                if let calc = latestCalculation, !calc.text.isEmpty {
+                    RecentActivityCard(
+                        title: AppLocalizer.string("Last Calculation"),
+                        value: calc.text,
+                        color: AppColor.primary,
+                        symbol: "plus.forwardslash.minus"
+                    )
+                }
 
-            if let transcript = latestTranscript, !transcript.text.isEmpty {
-                RecentActivityCard(title: AppLocalizer.string("Last Transcript"), value: transcript.text, color: AppColor.success, symbol: "waveform")
-            }
+                if let transcript = latestTranscript, !transcript.text.isEmpty {
+                    RecentActivityCard(
+                        title: AppLocalizer.string("Last Transcript"),
+                        value: transcript.text,
+                        color: AppColor.success,
+                        symbol: "waveform"
+                    )
+                }
 
-            if latestCalculation == nil && latestTranscript == nil {
-                Text(AppLocalizer.string("Your latest calculations and transcripts will show up here."))
-                    .appFont(size: 14, weight: .regular)
-                    .foregroundColor(AppColor.secondaryText)
+                if latestCalculation == nil && latestTranscript == nil {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(AppLocalizer.string("No recent items"))
+                            .appFont(size: 16, weight: .bold)
+                            .foregroundColor(AppColor.primaryText)
+
+                        Text(AppLocalizer.string("Calculations and transcripts will show up here after you use the tools."))
+                            .appFont(size: 14, weight: .regular)
+                            .foregroundColor(AppColor.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
+                    .padding(18)
                     .background(AppColor.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
+                    )
+                }
             }
         }
-    }
-
-    private var quickStats: some View {
-        HStack(spacing: 12) {
-            summaryCard(title: AppLocalizer.string("Tools"), value: "\(tools.count)", tint: AppColor.primary)
-            summaryCard(title: AppLocalizer.string("Ready Offline"), value: AppLocalizer.string("Yes"), tint: AppColor.success)
-            summaryCard(title: AppLocalizer.string("Languages"), value: "8", tint: AppColor.warning)
-        }
-    }
-
-    private func summaryCard(title: String, value: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .appFont(size: 13, weight: .medium)
-                .foregroundColor(AppColor.secondaryText)
-            Text(value)
-                .appFont(size: 20, weight: .bold)
-                .foregroundColor(tint)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(tint.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-    }
-
-    private func featuredCard(title: String, detail: String, symbol: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(tint.opacity(0.14))
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: symbol)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(tint)
-            }
-
-            Text(title)
-                .appFont(size: 16, weight: .bold)
-                .foregroundColor(AppColor.primaryText)
-
-            Text(detail)
-                .appFont(size: 14, weight: .regular)
-                .foregroundColor(AppColor.secondaryText)
-                .lineLimit(4)
-
-            Spacer(minLength: 0)
-
-            HStack(spacing: 6) {
-                Text(AppLocalizer.string("Open"))
-                    .appFont(size: 13, weight: .bold)
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 11, weight: .bold))
-            }
-            .foregroundColor(tint)
-        }
-        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168, alignment: .topLeading)
-        .padding(16)
-        .background(
-            LinearGradient(
-                colors: [AppColor.surface, tint.opacity(0.08)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(tint.opacity(0.12), lineWidth: 1)
-        )
     }
 
     private func sectionHeader(eyebrow: String, title: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 5) {
             Text(eyebrow)
-                .appFont(size: 13, weight: .bold)
+                .appFont(size: 12, weight: .bold)
                 .foregroundColor(AppColor.secondaryText)
 
             Text(title)
                 .appFont(size: 24, weight: .bold)
                 .foregroundColor(AppColor.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -250,38 +318,237 @@ private struct ToolDestinationView: View {
     }
 }
 
-private struct ToolTile: View {
+private struct HomeBackground: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color.dynamic(light: 0xF6F8FB, dark: 0x0B1220),
+                    Color.dynamic(light: 0xF2F5F9, dark: 0x0F172A),
+                    Color.dynamic(light: 0xEDF2F7, dark: 0x111827)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            Circle()
+                .fill(Color(hex: 0x8FB8FF, opacity: 0.14))
+                .frame(width: 320, height: 320)
+                .blur(radius: 24)
+                .offset(x: -120, y: -340)
+
+            Circle()
+                .fill(Color(hex: 0x9EDAC2, opacity: 0.14))
+                .frame(width: 260, height: 260)
+                .blur(radius: 22)
+                .offset(x: 150, y: -120)
+
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.20),
+                            .white.opacity(0.03)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .rotationEffect(.degrees(-12))
+                .blur(radius: 10)
+                .offset(x: 210, y: 230)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct HeroMetric: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .appFont(size: 11, weight: .medium)
+                .foregroundColor(.white.opacity(0.60))
+
+            Text(value)
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(.white)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(.white.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct QuickLaunchCard: View {
+    let eyebrow: String
+    let title: String
+    let detail: String
+    let symbol: String
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    Text(eyebrow.uppercased())
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(tint)
+                        .tracking(0.6)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(tint.opacity(0.10))
+                        .clipShape(Capsule())
+
+                    Spacer()
+
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(tint.opacity(0.14))
+                            .frame(width: 42, height: 42)
+
+                        Image(systemName: symbol)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(tint)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(title)
+                        .appFont(size: 18, weight: .bold)
+                        .foregroundColor(AppColor.primaryText)
+
+                    Text(detail)
+                        .appFont(size: 13, weight: .regular)
+                        .foregroundColor(AppColor.secondaryText)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+
+            Spacer(minLength: 0)
+
+            HStack {
+                Text(AppLocalizer.string("Open"))
+                    .appFont(size: 12, weight: .bold)
+                    .foregroundColor(tint)
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(tint)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(tint.opacity(0.08))
+            )
+            .padding(8)
+        }
+        .frame(width: 214, height: 176, alignment: .topLeading)
+        .background(
+            LinearGradient(
+                colors: [
+                    AppColor.surface.opacity(0.98),
+                    tint.opacity(0.04)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .background(AppColor.surface.opacity(0.92))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
+        )
+    }
+}
+
+private struct HomeListCard: View {
     let tool: ToolItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top) {
+        HStack(spacing: 16) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(tool.color.opacity(0.12))
+                    .frame(width: 58, height: 58)
+
+                Image(systemName: tool.symbol)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(tool.color)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(tool.title)
+                    .appFont(size: 18, weight: .bold)
+                    .foregroundColor(AppColor.primaryText)
+
+                Text(tool.description)
+                    .appFont(size: 14, weight: .regular)
+                    .foregroundColor(AppColor.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 8) {
+                Text(tool.subtitle)
+                    .appFont(size: 12, weight: .bold)
+                    .foregroundColor(tool.color)
+                    .multilineTextAlignment(.trailing)
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(AppColor.secondaryText.opacity(0.65))
+            }
+        }
+        .padding(18)
+        .background(AppColor.surface.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
+        )
+    }
+}
+
+private struct CompactToolCard: View {
+    let tool: ToolItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(tool.color.opacity(0.12))
-                        .frame(width: 48, height: 48)
+                        .frame(width: 44, height: 44)
 
                     Image(systemName: tool.symbol)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(tool.color)
                 }
 
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(AppColor.secondaryText.opacity(0.6))
             }
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(tool.title)
-                    .appFont(size: 18, weight: .bold)
+                    .appFont(size: 16, weight: .bold)
                     .foregroundColor(AppColor.primaryText)
-
-                Text(tool.subtitle)
-                    .appFont(size: 14, weight: .medium)
-                    .foregroundColor(tool.color)
-                    .lineLimit(1)
 
                 Text(tool.description)
                     .appFont(size: 13, weight: .regular)
@@ -289,31 +556,22 @@ private struct ToolTile: View {
                     .lineLimit(3)
             }
 
-            Spacer(minLength: 0)
+            Text(tool.subtitle)
+                .appFont(size: 12, weight: .bold)
+                .foregroundColor(tool.color)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(tool.color.opacity(0.10))
+                .clipShape(Capsule())
         }
-        .frame(maxWidth: .infinity, minHeight: 176, maxHeight: 176, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 158, alignment: .topLeading)
         .padding(16)
-        .background(AppColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(AppColor.surface.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
         )
-    }
-}
-
-private struct BadgeView: View {
-    let title: String
-    let color: Color
-
-    var body: some View {
-        Text(title)
-            .appFont(size: 13, weight: .bold)
-            .foregroundColor(color)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(color.opacity(0.12))
-            .clipShape(Capsule())
     }
 }
 
@@ -326,9 +584,9 @@ private struct RecentActivityCard: View {
     var body: some View {
         HStack(spacing: 14) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(color.opacity(0.14))
-                    .frame(width: 44, height: 44)
+                    .frame(width: 46, height: 46)
 
                 Image(systemName: symbol)
                     .foregroundColor(color)
@@ -338,6 +596,7 @@ private struct RecentActivityCard: View {
                 Text(title)
                     .appFont(size: 15, weight: .bold)
                     .foregroundColor(AppColor.primaryText)
+
                 Text(value)
                     .appFont(size: 14, weight: .regular)
                     .foregroundColor(AppColor.secondaryText)
@@ -347,11 +606,11 @@ private struct RecentActivityCard: View {
             Spacer()
         }
         .padding(16)
-        .background(AppColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(AppColor.surface.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(AppColor.border.opacity(0.7), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
         )
     }
 }

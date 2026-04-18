@@ -2,7 +2,7 @@ import Foundation
 
 enum AppLocalizer {
     static var currentLanguageIdentifier: String {
-        UserDefaults.standard.string(forKey: "preferredInterfaceLanguage") ?? InterfaceLanguage.english.rawValue
+        UserDefaults.standard.string(forKey: "preferredInterfaceLanguage") ?? InterfaceLanguage.defaultInterfaceLanguage.rawValue
     }
 
     static func string(_ key: String) -> String {

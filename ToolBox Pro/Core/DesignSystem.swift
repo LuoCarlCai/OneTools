@@ -157,21 +157,23 @@ struct FeatureLockedCard: View {
                 .appFont(size: 22, weight: .bold)
                 .foregroundColor(AppColor.primaryText)
 
-            Text(AppLocalizer.string("New users can try each tool twice for free. Unlock Pro to keep using it anytime after that."))
+            // Purchase-related copy is temporarily hidden.
+            Text(AppLocalizer.string("This tool is currently unavailable in this build."))
                 .appFont(size: 15, weight: .regular)
                 .foregroundColor(AppColor.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
 
-            NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
-                Text(AppLocalizer.string("Unlock Pro"))
-                    .appFont(size: 16, weight: .bold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(AppColor.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-            .buttonStyle(.plain)
+            // In-app purchase button is temporarily hidden.
+            // NavigationLink(destination: PaywallView().hidesTabBarOnPush()) {
+            //     Text(AppLocalizer.string("Unlock Pro"))
+            //         .appFont(size: 16, weight: .bold)
+            //         .foregroundColor(.white)
+            //         .frame(maxWidth: .infinity)
+            //         .padding(.vertical, 14)
+            //         .background(AppColor.primary)
+            //         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            // }
+            // .buttonStyle(.plain)
         }
         .padding(20)
         .background(AppColor.surface)

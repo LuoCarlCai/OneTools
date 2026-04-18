@@ -6,7 +6,7 @@ struct ToolBox_ProApp: App {
 
     init() {
         UserDefaults.standard.register(defaults: [
-            "preferredInterfaceLanguage": InterfaceLanguage.english.rawValue,
+            "preferredInterfaceLanguage": InterfaceLanguage.defaultInterfaceLanguage.rawValue,
             "defaultVoiceLanguage": VoiceLanguage.english.rawValue,
             "appAppearance": AppAppearance.system.rawValue,
             "saveCalculatorHistoryEnabled": true,

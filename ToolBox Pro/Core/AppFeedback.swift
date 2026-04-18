@@ -71,6 +71,14 @@ enum AppFeedback {
         play(style: .medium)
     }
 
+    static func previewHaptic(style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+        triggerHaptic(style: style)
+    }
+
+    static func previewSound() {
+        playSoundIfNeeded()
+    }
+
     static func success() {
         if hapticsEnabled {
             let generator = UINotificationFeedbackGenerator()
@@ -90,12 +98,16 @@ enum AppFeedback {
     }
 
     private static func play(style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        triggerHaptic(style: style)
+        playSoundIfNeeded()
+    }
+
+    private static func triggerHaptic(style: UIImpactFeedbackGenerator.FeedbackStyle) {
         if hapticsEnabled {
             let generator = UIImpactFeedbackGenerator(style: style)
             generator.prepare()
             generator.impactOccurred()
         }
-        playSoundIfNeeded()
     }
 
     private static func playSoundIfNeeded() {

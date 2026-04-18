@@ -219,24 +219,28 @@ final class PurchaseStore: ObservableObject {
     }
 
     func remainingFreeUses(for feature: PremiumFeature) -> Int {
-        max(0, Self.freeUseLimit - usageCounts()[feature.rawValue, default: 0])
+        // Free-trial counting is temporarily disabled so tools remain fully accessible.
+        // Original logic:
+        // max(0, Self.freeUseLimit - usageCounts()[feature.rawValue, default: 0])
+        0
     }
 
     func consumeFreeUseIfNeeded(for feature: PremiumFeature) -> Bool {
-        guard !isProUnlocked else { return true }
-
-        var usage = usageCounts()
-        let current = usage[feature.rawValue, default: 0]
-        guard current < Self.freeUseLimit else { return false }
-
-        usage[feature.rawValue] = current + 1
-        saveUsageCounts(usage)
-        objectWillChange.send()
-        return true
+        // Free-trial consumption is temporarily disabled so usage is never blocked.
+        // Original logic:
+        // guard !isProUnlocked else { return true }
+        // var usage = usageCounts()
+        // let current = usage[feature.rawValue, default: 0]
+        // guard current < Self.freeUseLimit else { return false }
+        // usage[feature.rawValue] = current + 1
+        // saveUsageCounts(usage)
+        // objectWillChange.send()
+        true
     }
 
     func hasAccess(to feature: PremiumFeature) -> Bool {
-        isProUnlocked || remainingFreeUses(for: feature) > 0
+        // Always allow access while the free-use restriction is disabled.
+        true
     }
 
     private func usageCounts() -> [String: Int] {

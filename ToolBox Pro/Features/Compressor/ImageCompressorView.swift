@@ -29,6 +29,9 @@ struct ImageCompressorView: View {
     @State private var remainingUses = 0
     @State private var saveMessage = ""
     @State private var saveMessageTint = AppColor.success
+    @State private var saveAlertTitle = ""
+    @State private var saveAlertMessage = ""
+    @State private var isShowingSaveAlert = false
     @State private var didConsumeTrialInSession = false
     private let premiumFeature: PremiumFeature = .compressor
 
@@ -71,6 +74,11 @@ struct ImageCompressorView: View {
         }
         .onChange(of: compressedImage) { _ in
             saveMessage = ""
+        }
+        .alert(saveAlertTitle, isPresented: $isShowingSaveAlert) {
+            Button(AppLocalizer.string("OK"), role: .cancel) {}
+        } message: {
+            Text(saveAlertMessage)
         }
         .sheet(isPresented: $isShowingPicker) {
             CompressorImagePicker(image: $selectedImage, originalSizeText: $originalSizeText, compressedImage: $compressedImage, compressedSizeText: $compressedSizeText)
@@ -196,10 +204,15 @@ struct ImageCompressorView: View {
                             AppFeedback.success()
                             saveMessage = AppLocalizer.string("Saved to Photos.")
                             saveMessageTint = AppColor.success
+                            saveAlertTitle = AppLocalizer.string("Save Complete")
+                            saveAlertMessage = AppLocalizer.string("Saved to Photos. Open the Photos app to view it.")
                         case .failure:
-                            saveMessage = AppLocalizer.string("Could not save right now.")
+                            saveMessage = saveFailureMessage(for: result)
                             saveMessageTint = AppColor.warning
+                            saveAlertTitle = AppLocalizer.string("Save Failed")
+                            saveAlertMessage = saveFailureMessage(for: result)
                         }
+                        isShowingSaveAlert = true
                     }
                 }
             }
@@ -240,6 +253,25 @@ struct ImageCompressorView: View {
         case .high:
             return AppLocalizer.string("High compression creates the smallest file for fast upload.")
         }
+    }
+
+    private func saveFailureMessage(for result: Result<Void, Error>) -> String {
+        guard case let .failure(error) = result else {
+            return AppLocalizer.string("Could not save right now.")
+        }
+
+        if let photoError = error as? PhotoLibrarySaveError {
+            switch photoError {
+            case .permissionDenied:
+                return AppLocalizer.string("Please allow Photos access in Settings to save images.")
+            case .restricted:
+                return AppLocalizer.string("Photos access is restricted on this device.")
+            case .unknown:
+                return AppLocalizer.string("Could not save right now.")
+            }
+        }
+
+        return AppLocalizer.string("Could not save right now.")
     }
 
     private func summaryBox(title: String, value: String, tint: Color) -> some View {

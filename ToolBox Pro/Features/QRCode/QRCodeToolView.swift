@@ -6,6 +6,7 @@ import UIKit
 struct QRCodeToolView: View {
     @EnvironmentObject private var purchaseStore: PurchaseStore
     @StateObject private var photoSaver = PhotoLibrarySaver()
+    @FocusState private var isInputFocused: Bool
     enum Mode: Int {
         case generate = 0
         case scan = 1
@@ -36,14 +37,52 @@ struct QRCodeToolView: View {
         }
     }
 
+    enum QRColorStyle: String, CaseIterable, Identifiable {
+        case classic
+        case ocean
+        case forest
+        case plum
+        case sunset
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .classic: return AppLocalizer.string("Classic")
+            case .ocean: return AppLocalizer.string("Ocean")
+            case .forest: return AppLocalizer.string("Forest")
+            case .plum: return AppLocalizer.string("Plum")
+            case .sunset: return AppLocalizer.string("Sunset")
+            }
+        }
+
+        var foreground: UIColor {
+            switch self {
+            case .classic: return UIColor.black
+            case .ocean: return UIColor(red: 0.07, green: 0.36, blue: 0.78, alpha: 1)
+            case .forest: return UIColor(red: 0.07, green: 0.47, blue: 0.31, alpha: 1)
+            case .plum: return UIColor(red: 0.41, green: 0.19, blue: 0.63, alpha: 1)
+            case .sunset: return UIColor(red: 0.82, green: 0.34, blue: 0.18, alpha: 1)
+            }
+        }
+
+        var swatch: Color {
+            Color(uiColor: foreground)
+        }
+    }
+
     @State private var mode: Int
     @State private var generateKind: GenerateKind = .text
+    @State private var colorStyle: QRColorStyle = .classic
     @State private var text = ""
     @State private var scanResult = ""
     @State private var isShowingShareSheet = false
     @State private var shareImage: UIImage?
     @State private var saveMessage = ""
     @State private var saveMessageTint = AppColor.success
+    @State private var saveAlertTitle = ""
+    @State private var saveAlertMessage = ""
+    @State private var isShowingSaveAlert = false
     @State private var isLocked = false
     @State private var remainingUses = 0
     @State private var didConsumeGenerateTrial = false
@@ -88,6 +127,10 @@ struct QRCodeToolView: View {
             }
             .padding(.vertical, 20)
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            dismissKeyboard()
+        }
         .navigationTitle(AppLocalizer.string("QR Toolkit"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { refreshAccessState() }
@@ -123,9 +166,17 @@ struct QRCodeToolView: View {
             saveMessage = ""
             didConsumeGenerateTrial = false
         }
-        .sheet(isPresented: $isShowingShareSheet) {
-            ShareSheet(items: shareImage.map { [$0] } ?? [])
+        .alert(saveAlertTitle, isPresented: $isShowingSaveAlert) {
+            Button(AppLocalizer.string("OK"), role: .cancel) {}
+        } message: {
+            Text(saveAlertMessage)
         }
+        .background(
+            ShareSheetPresenter(
+                isPresented: $isShowingShareSheet,
+                items: shareImage.map { [$0] } ?? []
+            )
+        )
     }
 
     private var modeSummary: some View {
@@ -161,6 +212,7 @@ struct QRCodeToolView: View {
                     .pickerStyle(.segmented)
 
                     TextField(inputPlaceholder, text: $text)
+                        .focused($isInputFocused)
                         .padding(14)
                         .background(AppColor.background)
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -172,6 +224,8 @@ struct QRCodeToolView: View {
                     Text(generateHint)
                         .appFont(size: 13, weight: .regular)
                         .foregroundColor(AppColor.secondaryText)
+
+                    colorPickerRow
                 }
                 .padding(16)
                 .background(AppColor.surface)
@@ -213,10 +267,15 @@ struct QRCodeToolView: View {
                                         AppFeedback.success()
                                         saveMessage = AppLocalizer.string("Saved to Photos.")
                                         saveMessageTint = AppColor.success
+                                        saveAlertTitle = AppLocalizer.string("Save Complete")
+                                        saveAlertMessage = AppLocalizer.string("Saved to Photos. Open the Photos app to view it.")
                                     case .failure:
-                                        saveMessage = AppLocalizer.string("Could not save right now.")
+                                        saveMessage = saveFailureMessage(for: result)
                                         saveMessageTint = AppColor.warning
+                                        saveAlertTitle = AppLocalizer.string("Save Failed")
+                                        saveAlertMessage = saveFailureMessage(for: result)
                                     }
+                                    isShowingSaveAlert = true
                                 }
                             }
                         }
@@ -261,6 +320,7 @@ struct QRCodeToolView: View {
             }
             .padding(.horizontal, 20)
         }
+        .scrollDismissesKeyboardCompat()
     }
 
     private var scanView: some View {
@@ -397,6 +457,25 @@ struct QRCodeToolView: View {
         }
     }
 
+    private func saveFailureMessage(for result: Result<Void, Error>) -> String {
+        guard case let .failure(error) = result else {
+            return AppLocalizer.string("Could not save right now.")
+        }
+
+        if let photoError = error as? PhotoLibrarySaveError {
+            switch photoError {
+            case .permissionDenied:
+                return AppLocalizer.string("Please allow Photos access in Settings to save images.")
+            case .restricted:
+                return AppLocalizer.string("Photos access is restricted on this device.")
+            case .unknown:
+                return AppLocalizer.string("Could not save right now.")
+            }
+        }
+
+        return AppLocalizer.string("Could not save right now.")
+    }
+
     private func infoCard(title: String, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -437,11 +516,66 @@ struct QRCodeToolView: View {
         )
     }
 
+    private var colorPickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(AppLocalizer.string("Color"))
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+
+            HStack(spacing: 10) {
+                ForEach(QRColorStyle.allCases) { style in
+                    Button {
+                        AppFeedback.selection()
+                        colorStyle = style
+                    } label: {
+                        VStack(spacing: 6) {
+                            Circle()
+                                .fill(style.swatch)
+                                .frame(width: 26, height: 26)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white.opacity(0.9), lineWidth: 2)
+                                        .padding(3)
+                                        .opacity(colorStyle == style ? 1 : 0)
+                                )
+                            Text(style.title)
+                                .appFont(size: 11, weight: .medium)
+                                .foregroundColor(colorStyle == style ? AppColor.primaryText : AppColor.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(AppColor.background)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(colorStyle == style ? style.swatch.opacity(0.9) : AppColor.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
     private var qrImage: UIImage? {
         guard let payload = qrPayload else { return nil }
         filter.setValue(Data(payload.utf8), forKey: "inputMessage")
-        guard let outputImage = filter.outputImage,
-              let cgImage = context.createCGImage(outputImage.transformed(by: CGAffineTransform(scaleX: 10, y: 10)), from: outputImage.extent) else {
+        filter.setValue("M", forKey: "inputCorrectionLevel")
+        guard let outputImage = filter.outputImage else {
+            return nil
+        }
+
+        let falseColorFilter = CIFilter.falseColor()
+        falseColorFilter.inputImage = outputImage
+        falseColorFilter.color0 = CIColor(color: colorStyle.foreground)
+        falseColorFilter.color1 = CIColor(color: .white)
+
+        guard let coloredImage = falseColorFilter.outputImage else {
+            return nil
+        }
+
+        let scaledImage = coloredImage.transformed(by: CGAffineTransform(scaleX: 12, y: 12))
+        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent.integral) else {
             return nil
         }
         return UIImage(cgImage: cgImage)
@@ -487,6 +621,10 @@ struct QRCodeToolView: View {
         return true
     }
 
+    private func dismissKeyboard() {
+        isInputFocused = false
+    }
+
     private func consumeGenerateUseIfNeeded() -> Bool {
         guard !didConsumeGenerateTrial else { return true }
         guard consumeFeatureUseIfNeeded() else { return false }
@@ -495,14 +633,48 @@ struct QRCodeToolView: View {
     }
 }
 
-private struct ShareSheet: UIViewControllerRepresentable {
+private extension View {
+    @ViewBuilder
+    func scrollDismissesKeyboardCompat() -> some View {
+        if #available(iOS 16.0, *) {
+            scrollDismissesKeyboard(.immediately)
+        } else {
+            self
+        }
+    }
+}
+
+private struct ShareSheetPresenter: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
     let items: [Any]
 
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    func makeUIViewController(context: Context) -> UIViewController {
+        UIViewController()
     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        guard isPresented, uiViewController.presentedViewController == nil, !items.isEmpty else { return }
+
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, _, _, _ in
+            isPresented = false
+        }
+
+        if let popover = controller.popoverPresentationController {
+            popover.sourceView = uiViewController.view
+            popover.sourceRect = CGRect(
+                x: uiViewController.view.bounds.midX,
+                y: uiViewController.view.bounds.maxY - 1,
+                width: 1,
+                height: 1
+            )
+            popover.permittedArrowDirections = []
+        }
+
+        DispatchQueue.main.async {
+            uiViewController.present(controller, animated: true)
+        }
+    }
 }
 
 private struct QRScannerView: UIViewControllerRepresentable {

@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var showSplash = !ProcessInfo.processInfo.isRunningForPreviews
     @AppStorage("appAppearance") private var appAppearanceRawValue = AppAppearance.system.rawValue
-    @AppStorage("preferredInterfaceLanguage") private var preferredInterfaceLanguage = InterfaceLanguage.english.rawValue
+    @AppStorage("preferredInterfaceLanguage") private var preferredInterfaceLanguage = InterfaceLanguage.defaultInterfaceLanguage.rawValue
 
     var body: some View {
         ZStack {
@@ -93,6 +93,13 @@ enum InterfaceLanguage: String, CaseIterable, Identifiable {
     case korean = "ko"
 
     var id: String { rawValue }
+
+    static var defaultInterfaceLanguage: InterfaceLanguage {
+        Locale.preferredLanguages.lazy
+            .compactMap { language(matchingSystemIdentifier: $0) }
+            .first ?? .english
+    }
+
     var title: String {
         switch self {
         case .english: return AppLocalizer.string("English")
@@ -103,6 +110,37 @@ enum InterfaceLanguage: String, CaseIterable, Identifiable {
         case .japanese: return AppLocalizer.string("Japanese")
         case .chineseSimplified: return AppLocalizer.string("Chinese (Simplified)")
         case .korean: return AppLocalizer.string("Korean")
+        }
+    }
+
+    private static func language(matchingSystemIdentifier identifier: String) -> InterfaceLanguage? {
+        let locale = Locale(identifier: identifier.replacingOccurrences(of: "_", with: "-"))
+        let languageCode = locale.languageCode?.lowercased()
+        let scriptCode = locale.scriptCode?.lowercased()
+        let regionCode = locale.regionCode?.uppercased()
+
+        switch languageCode {
+        case "en":
+            return .english
+        case "es":
+            return .spanish
+        case "fr":
+            return .french
+        case "de":
+            return .german
+        case "ja":
+            return .japanese
+        case "ko":
+            return .korean
+        case "pt":
+            return regionCode == "BR" ? .portugueseBrazil : nil
+        case "zh":
+            if scriptCode == "hans" || regionCode == "CN" || regionCode == "SG" {
+                return .chineseSimplified
+            }
+            return nil
+        default:
+            return nil
         }
     }
 }
