@@ -60,6 +60,23 @@ struct AppSplashView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.leading, 32)
             .padding(.top, 168)
+
+            VStack {
+                Spacer()
+
+                Text(AppLocalizer.string("Ready when you are"))
+                    .appFont(size: 15, weight: .medium)
+                    .foregroundColor(.white.opacity(0.96))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color(hex: 0x5A6480).opacity(0.82))
+                    )
+                    .padding(.bottom, 44)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

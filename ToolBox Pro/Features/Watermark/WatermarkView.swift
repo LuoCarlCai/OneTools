@@ -42,7 +42,7 @@ struct WatermarkView: View {
 
     @State private var selectedImage: UIImage?
     @State private var isShowingPicker = false
-    @State private var watermarkText = "OneTools"
+    @State private var watermarkText = "One Tools"
     @State private var colorStyle: WatermarkColorStyle = .white
     @State private var textSize = 34.0
     @State private var watermarkScale = 1.0

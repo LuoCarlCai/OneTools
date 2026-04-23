@@ -13,30 +13,27 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-yellow">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchOrbYellow" translatesAutoresizingMaskIntoConstraints="NO" id="orb-yellow">
                                 <rect key="frame" x="-84" y="108" width="168" height="168"/>
-                                <color key="backgroundColor" red="1" green="0.9019607843" blue="0.6392156863" alpha="0.82" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="168" id="oyw"/>
                                     <constraint firstAttribute="height" constant="168" id="oyh"/>
                                 </constraints>
-                            </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-green">
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchOrbGreen" translatesAutoresizingMaskIntoConstraints="NO" id="orb-green">
                                 <rect key="frame" x="286" y="84" width="176" height="176"/>
-                                <color key="backgroundColor" red="0.8" green="0.9568627451" blue="0.9176470588" alpha="0.92" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="176" id="ogw"/>
                                     <constraint firstAttribute="height" constant="176" id="ogh"/>
                                 </constraints>
-                            </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="orb-purple">
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchOrbPurple" translatesAutoresizingMaskIntoConstraints="NO" id="orb-purple">
                                 <rect key="frame" x="226" y="690" width="210" height="210"/>
-                                <color key="backgroundColor" red="0.9215686275" green="0.8666666667" blue="1" alpha="0.72" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="210" id="opw"/>
                                     <constraint firstAttribute="height" constant="210" id="oph"/>
                                 </constraints>
-                            </view>
+                            </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="accent-line">
                                 <rect key="frame" x="32" y="248" width="1" height="150"/>
                                 <color key="backgroundColor" white="1" alpha="0.72" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -69,16 +66,22 @@
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chip-scan">
                                                 <rect key="frame" x="0.0" y="0.0" width="62" height="29"/>
                                                 <subviews>
+                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchChipBlue" translatesAutoresizingMaskIntoConstraints="NO" id="chip-scan-bg">
+                                                        <rect key="frame" x="0.0" y="0.0" width="62" height="29"/>
+                                                    </imageView>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="SCAN" textAlignment="center" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chip-scan-label">
                                                         <rect key="frame" x="12" y="8" width="38" height="13"/>
                                                         <fontDescription key="fontDescription" type="system" weight="bold" pointSize="11"/>
                                                         <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     </label>
                                                 </subviews>
-                                                <color key="backgroundColor" red="0.1843137255" green="0.4039215686" blue="0.9647058824" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="62" id="c00"/>
                                                     <constraint firstAttribute="height" constant="29" id="c00h"/>
+                                                    <constraint firstItem="chip-scan-bg" firstAttribute="leading" secondItem="chip-scan" secondAttribute="leading" id="c00a"/>
+                                                    <constraint firstItem="chip-scan-bg" firstAttribute="trailing" secondItem="chip-scan" secondAttribute="trailing" id="c00b"/>
+                                                    <constraint firstItem="chip-scan-bg" firstAttribute="top" secondItem="chip-scan" secondAttribute="top" id="c00c"/>
+                                                    <constraint firstAttribute="bottom" secondItem="chip-scan-bg" secondAttribute="bottom" id="c00d"/>
                                                     <constraint firstItem="chip-scan-label" firstAttribute="centerX" secondItem="chip-scan" secondAttribute="centerX" id="c01"/>
                                                     <constraint firstItem="chip-scan-label" firstAttribute="centerY" secondItem="chip-scan" secondAttribute="centerY" id="c02"/>
                                                 </constraints>
@@ -86,16 +89,22 @@
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chip-convert">
                                                 <rect key="frame" x="70" y="0.0" width="82" height="29"/>
                                                 <subviews>
+                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchChipGreen" translatesAutoresizingMaskIntoConstraints="NO" id="chip-convert-bg">
+                                                        <rect key="frame" x="0.0" y="0.0" width="82" height="29"/>
+                                                    </imageView>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="CONVERT" textAlignment="center" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chip-convert-label">
                                                         <rect key="frame" x="11" y="8" width="60" height="13"/>
                                                         <fontDescription key="fontDescription" type="system" weight="bold" pointSize="11"/>
                                                         <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     </label>
                                                 </subviews>
-                                                <color key="backgroundColor" red="0.2235294118" green="0.8235294118" blue="0.6235294118" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="82" id="c03w"/>
                                                     <constraint firstAttribute="height" constant="29" id="c03h"/>
+                                                    <constraint firstItem="chip-convert-bg" firstAttribute="leading" secondItem="chip-convert" secondAttribute="leading" id="c03a"/>
+                                                    <constraint firstItem="chip-convert-bg" firstAttribute="trailing" secondItem="chip-convert" secondAttribute="trailing" id="c03b"/>
+                                                    <constraint firstItem="chip-convert-bg" firstAttribute="top" secondItem="chip-convert" secondAttribute="top" id="c03c"/>
+                                                    <constraint firstAttribute="bottom" secondItem="chip-convert-bg" secondAttribute="bottom" id="c03d"/>
                                                     <constraint firstItem="chip-convert-label" firstAttribute="centerX" secondItem="chip-convert" secondAttribute="centerX" id="c03"/>
                                                     <constraint firstItem="chip-convert-label" firstAttribute="centerY" secondItem="chip-convert" secondAttribute="centerY" id="c04"/>
                                                 </constraints>
@@ -103,16 +112,22 @@
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="chip-voice">
                                                 <rect key="frame" x="160" y="0.0" width="64" height="29"/>
                                                 <subviews>
+                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchChipOrange" translatesAutoresizingMaskIntoConstraints="NO" id="chip-voice-bg">
+                                                        <rect key="frame" x="0.0" y="0.0" width="64" height="29"/>
+                                                    </imageView>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="VOICE" textAlignment="center" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chip-voice-label">
                                                         <rect key="frame" x="11" y="8" width="42" height="13"/>
                                                         <fontDescription key="fontDescription" type="system" weight="bold" pointSize="11"/>
                                                         <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     </label>
                                                 </subviews>
-                                                <color key="backgroundColor" red="0.9843137255" green="0.5450980392" blue="0.1411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="64" id="c05w"/>
                                                     <constraint firstAttribute="height" constant="29" id="c05h"/>
+                                                    <constraint firstItem="chip-voice-bg" firstAttribute="leading" secondItem="chip-voice" secondAttribute="leading" id="c05a"/>
+                                                    <constraint firstItem="chip-voice-bg" firstAttribute="trailing" secondItem="chip-voice" secondAttribute="trailing" id="c05b"/>
+                                                    <constraint firstItem="chip-voice-bg" firstAttribute="top" secondItem="chip-voice" secondAttribute="top" id="c05c"/>
+                                                    <constraint firstAttribute="bottom" secondItem="chip-voice-bg" secondAttribute="bottom" id="c05d"/>
                                                     <constraint firstItem="chip-voice-label" firstAttribute="centerX" secondItem="chip-voice" secondAttribute="centerX" id="c05"/>
                                                     <constraint firstItem="chip-voice-label" firstAttribute="centerY" secondItem="chip-voice" secondAttribute="centerY" id="c06"/>
                                                 </constraints>
@@ -153,6 +168,24 @@
                                     <constraint firstAttribute="bottom" secondItem="detail-main" secondAttribute="bottom" id="b11"/>
                                 </constraints>
                             </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bottom-card">
+                                <rect key="frame" x="102" y="762" width="189" height="46"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="center" text="Ready when you are" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="1" adjustsFontSizeToFit="YES" minimumScaleFactor="0.85" translatesAutoresizingMaskIntoConstraints="NO" id="bottom-card-label">
+                                        <rect key="frame" x="24" y="14" width="141" height="18"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="15"/>
+                                        <color key="textColor" white="1" alpha="0.96" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" red="0.3529411765" green="0.3921568627" blue="0.5019607843" alpha="0.82" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="189" id="bcw"/>
+                                    <constraint firstAttribute="height" constant="46" id="bch"/>
+                                    <constraint firstItem="bottom-card-label" firstAttribute="leading" secondItem="bottom-card" secondAttribute="leading" constant="24" id="bc5"/>
+                                    <constraint firstAttribute="trailing" secondItem="bottom-card-label" secondAttribute="trailing" constant="24" id="bc6"/>
+                                    <constraint firstItem="bottom-card-label" firstAttribute="centerY" secondItem="bottom-card" secondAttribute="centerY" id="bc7"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                         <color key="backgroundColor" red="0.9882352941" green="0.9882352941" blue="0.9960784314" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -167,6 +200,8 @@
                             <constraint firstItem="accent-line" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" constant="199" id="m08"/>
                             <constraint firstAttribute="trailing" secondItem="orb-purple" secondAttribute="trailing" constant="-43" id="m09"/>
                             <constraint firstItem="orb-purple" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" constant="48" id="m10"/>
+                            <constraint firstItem="bottom-card" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="m11"/>
+                            <constraint firstItem="bottom-card" firstAttribute="bottom" secondItem="Bcu-3y-fUS" secondAttribute="bottom" constant="-40" id="m12"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -175,4 +210,12 @@
             <point key="canvasLocation" x="40" y="44"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LaunchChipBlue" width="62" height="29"/>
+        <image name="LaunchChipGreen" width="82" height="29"/>
+        <image name="LaunchChipOrange" width="64" height="29"/>
+        <image name="LaunchOrbGreen" width="176" height="176"/>
+        <image name="LaunchOrbPurple" width="210" height="210"/>
+        <image name="LaunchOrbYellow" width="168" height="168"/>
+    </resources>
 </document>
