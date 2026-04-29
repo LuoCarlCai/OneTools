@@ -16,6 +16,8 @@ struct CalculatorView: View {
     @State private var dateStart = Date()
     @State private var dateEnd = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     @State private var dateOffsetInput = "7"
+    @State private var copyMessage = ""
+    @State private var copyMessageTint = AppColor.success
     @State private var isLocked = false
     @State private var remainingUses = 0
     private let premiumFeature: PremiumFeature = .calculator
@@ -160,10 +162,20 @@ struct CalculatorView: View {
 
     private var display: some View {
         VStack(alignment: .trailing, spacing: 12) {
-            Text(mode.displayTitle)
-                .appFont(size: 14, weight: .medium)
-                .foregroundColor(AppColor.secondaryText)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Text(mode.displayTitle)
+                    .appFont(size: 14, weight: .medium)
+                    .foregroundColor(AppColor.secondaryText)
+
+                Spacer()
+
+                Button(AppLocalizer.string("Copy Result")) {
+                    copyCalculatorValue(expression)
+                }
+                .buttonStyle(.plain)
+                .appFont(size: 13, weight: .bold)
+                .foregroundColor(AppColor.primary)
+            }
 
             Text(expression)
                 .appFont(size: 36, weight: .bold)
@@ -176,6 +188,13 @@ struct CalculatorView: View {
                 Text(statusMessage)
                     .appFont(size: 13, weight: .medium)
                     .foregroundColor(AppColor.warning)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
+            if !copyMessage.isEmpty {
+                Text(copyMessage)
+                    .appFont(size: 13, weight: .medium)
+                    .foregroundColor(copyMessageTint)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
@@ -491,6 +510,7 @@ struct CalculatorView: View {
         case "C":
             expression = "0"
             statusMessage = ""
+            copyMessage = ""
         case "⌫":
             expression = String(expression.dropLast())
             if expression.isEmpty { expression = "0" }
@@ -502,6 +522,7 @@ struct CalculatorView: View {
                 shouldReset = false
             }
             statusMessage = ""
+            copyMessage = ""
             if expression == "0", !"./*+-()".contains(item) {
                 expression = item
             } else {
@@ -564,9 +585,19 @@ struct CalculatorView: View {
 
     private func insertConstant(_ value: Double) {
         statusMessage = ""
+        copyMessage = ""
         expression = format(value)
         shouldReset = true
         AppFeedback.selection()
+    }
+
+    private func copyCalculatorValue(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "0" || shouldReset else { return }
+        UIPasteboard.general.string = trimmed
+        AppFeedback.success()
+        copyMessage = AppLocalizer.string("Result copied.")
+        copyMessageTint = AppColor.success
     }
 
     private func saveHistoryEntry(_ text: String) {

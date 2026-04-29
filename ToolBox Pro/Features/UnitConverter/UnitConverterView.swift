@@ -2,10 +2,13 @@ import SwiftUI
 
 struct UnitConverterView: View {
     @EnvironmentObject private var purchaseStore: PurchaseStore
+    @FocusState private var isInputFocused: Bool
     @State private var category = ConversionCategory.all.first!
     @State private var fromUnit = ConversionCategory.all.first!.units.first!
     @State private var toUnit = ConversionCategory.all.first!.units.dropFirst().first!
     @State private var input = "1"
+    @State private var statusMessage = ""
+    @State private var statusMessageTint = AppColor.success
     @State private var isLocked = false
     @State private var remainingUses = 0
     @State private var didConsumeTrialInSession = false
@@ -42,6 +45,10 @@ struct UnitConverterView: View {
                 }
                 .padding(20)
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isInputFocused = false
         }
         .navigationTitle(AppLocalizer.string("Unit Converter"))
         .navigationBarTitleDisplayMode(.inline)
@@ -119,6 +126,7 @@ struct UnitConverterView: View {
                     .foregroundColor(AppColor.primaryText)
 
                 TextField(AppLocalizer.string("Value"), text: $input)
+                    .focused($isInputFocused)
                     .keyboardType(.decimalPad)
                     .padding(14)
                     .background(AppColor.background)
@@ -126,7 +134,26 @@ struct UnitConverterView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .stroke(AppColor.border, lineWidth: 1)
-                    )
+                        )
+            }
+
+            HStack(spacing: 12) {
+                Button(AppLocalizer.string("Paste")) {
+                    pasteFromClipboard()
+                }
+                .buttonStyle(.plain)
+                .appFont(size: 15, weight: .bold)
+                .foregroundColor(AppColor.primary)
+
+                Spacer()
+
+                Button(AppLocalizer.string("Copy Result")) {
+                    copyResultToClipboard()
+                }
+                .buttonStyle(.plain)
+                .appFont(size: 15, weight: .bold)
+                .foregroundColor(AppColor.success)
+                .disabled(Double(input) == nil)
             }
 
             VStack(spacing: 12) {
@@ -161,6 +188,12 @@ struct UnitConverterView: View {
                 Text(resultDetail)
                     .appFont(size: 14, weight: .regular)
                     .foregroundColor(AppColor.secondaryText)
+
+                if !statusMessage.isEmpty {
+                    Text(statusMessage)
+                        .appFont(size: 13, weight: .medium)
+                        .foregroundColor(statusMessageTint)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
@@ -232,6 +265,37 @@ struct UnitConverterView: View {
         formatter.maximumFractionDigits = 4
         formatter.minimumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    private func pasteFromClipboard() {
+        guard let clipboard = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines), !clipboard.isEmpty else {
+            statusMessage = AppLocalizer.string("No number found in clipboard.")
+            statusMessageTint = AppColor.warning
+            return
+        }
+
+        let normalized = clipboard.replacingOccurrences(of: ",", with: "")
+        guard Double(normalized) != nil else {
+            statusMessage = AppLocalizer.string("No number found in clipboard.")
+            statusMessageTint = AppColor.warning
+            return
+        }
+
+        input = normalized
+        isInputFocused = false
+        AppFeedback.success()
+        statusMessage = AppLocalizer.string("Pasted from clipboard.")
+        statusMessageTint = AppColor.success
+    }
+
+    private func copyResultToClipboard() {
+        guard let value = Double(input) else { return }
+        let output = "\(formattedValue(convertedValue(from: value))) \(toUnit.symbol)"
+        UIPasteboard.general.string = output
+        isInputFocused = false
+        AppFeedback.success()
+        statusMessage = AppLocalizer.string("Result copied.")
+        statusMessageTint = AppColor.success
     }
 
     private func refreshAccessState() {

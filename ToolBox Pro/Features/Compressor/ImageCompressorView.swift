@@ -23,8 +23,12 @@ struct ImageCompressorView: View {
     @State private var selectedImage: UIImage?
     @State private var compressedImage: UIImage?
     @State private var level: Level = .medium
+    @State private var quality = Level.medium.rawValue
     @State private var originalSizeText = "--"
     @State private var compressedSizeText = "--"
+    @State private var originalBytes: Int64 = 0
+    @State private var compressedBytes: Int64 = 0
+    @State private var isShowingShareSheet = false
     @State private var isLocked = false
     @State private var remainingUses = 0
     @State private var saveMessage = ""
@@ -75,14 +79,33 @@ struct ImageCompressorView: View {
         .onChange(of: compressedImage) { _ in
             saveMessage = ""
         }
+        .onChange(of: level) { value in
+            quality = value.rawValue
+            if selectedImage != nil && compressedImage != nil {
+                compress()
+            }
+        }
         .alert(saveAlertTitle, isPresented: $isShowingSaveAlert) {
             Button(AppLocalizer.string("OK"), role: .cancel) {}
         } message: {
             Text(saveAlertMessage)
         }
         .sheet(isPresented: $isShowingPicker) {
-            CompressorImagePicker(image: $selectedImage, originalSizeText: $originalSizeText, compressedImage: $compressedImage, compressedSizeText: $compressedSizeText)
+            CompressorImagePicker(
+                image: $selectedImage,
+                originalSizeText: $originalSizeText,
+                compressedImage: $compressedImage,
+                compressedSizeText: $compressedSizeText,
+                originalBytes: $originalBytes,
+                compressedBytes: $compressedBytes
+            )
         }
+        .background(
+            ShareSheetPresenter(
+                isPresented: $isShowingShareSheet,
+                items: compressedImage.map { [$0] } ?? []
+            )
+        )
     }
 
     private var infoCard: some View {
@@ -109,7 +132,7 @@ struct ImageCompressorView: View {
         HStack(spacing: 12) {
             summaryBox(title: AppLocalizer.string("Original"), value: originalSizeText, tint: AppColor.secondaryText)
             summaryBox(title: AppLocalizer.string("Compressed"), value: compressedSizeText, tint: AppColor.primary)
-            summaryBox(title: AppLocalizer.string("Level"), value: level.title, tint: AppColor.success)
+            summaryBox(title: AppLocalizer.string("Saved"), value: savingsText, tint: AppColor.success)
         }
     }
 
@@ -170,6 +193,29 @@ struct ImageCompressorView: View {
             }
             .pickerStyle(.segmented)
 
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(AppLocalizer.string("Quality"))
+                        .appFont(size: 15, weight: .bold)
+                        .foregroundColor(AppColor.primaryText)
+                    Spacer()
+                    Text("\(Int((quality * 100).rounded()))%")
+                        .appFont(size: 14, weight: .bold)
+                        .foregroundColor(AppColor.primary)
+                }
+
+                Slider(value: $quality, in: 0.1...0.95, step: 0.05)
+                    .onChange(of: quality) { _ in
+                        if selectedImage != nil && compressedImage != nil {
+                            compress()
+                        }
+                    }
+
+                Text(AppLocalizer.string("Lower quality creates a smaller file."))
+                    .appFont(size: 13, weight: .regular)
+                    .foregroundColor(AppColor.secondaryText)
+            }
+
             Text("\(originalSizeText)  ->  \(compressedSizeText)")
                 .appFont(size: 15, weight: .medium)
                 .foregroundColor(AppColor.secondaryText)
@@ -182,18 +228,37 @@ struct ImageCompressorView: View {
                 .appFont(size: 13, weight: .regular)
                 .foregroundColor(AppColor.secondaryText)
 
-            Button(AppLocalizer.string("Compress")) {
-                guard consumeFeatureUseInSessionIfNeeded() else { return }
-                AppFeedback.action()
-                compress()
+            HStack(spacing: 12) {
+                Button(AppLocalizer.string("Compress")) {
+                    guard consumeFeatureUseInSessionIfNeeded() else { return }
+                    AppFeedback.action()
+                    compress()
+                }
+                .appFont(size: 16, weight: .bold)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(AppColor.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .disabled(selectedImage == nil)
+
+                Button(AppLocalizer.string("Share")) {
+                    guard consumeFeatureUseInSessionIfNeeded() else { return }
+                    AppFeedback.action()
+                    isShowingShareSheet = compressedImage != nil
+                }
+                .appFont(size: 16, weight: .bold)
+                .foregroundColor(AppColor.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(AppColor.background)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(AppColor.border, lineWidth: 1)
+                )
+                .disabled(compressedImage == nil)
             }
-            .appFont(size: 16, weight: .bold)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(AppColor.primary)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .disabled(selectedImage == nil)
 
             Button(AppLocalizer.string("Save")) {
                 guard consumeFeatureUseInSessionIfNeeded() else { return }
@@ -238,21 +303,30 @@ struct ImageCompressorView: View {
 
     private func compress() {
         guard let selectedImage,
-              let data = selectedImage.jpegData(compressionQuality: level.rawValue),
+              let data = selectedImage.jpegData(compressionQuality: quality),
               let image = UIImage(data: data) else { return }
         compressedImage = image
+        compressedBytes = Int64(data.count)
         compressedSizeText = ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
     }
 
     private var levelDetail: String {
-        switch level {
-        case .low:
+        switch quality {
+        case 0.75...:
             return AppLocalizer.string("Low compression keeps more detail with a larger file size.")
-        case .medium:
+        case 0.45..<0.75:
             return AppLocalizer.string("Medium compression balances quality and size for sharing.")
-        case .high:
+        default:
             return AppLocalizer.string("High compression creates the smallest file for fast upload.")
         }
+    }
+
+    private var savingsText: String {
+        guard originalBytes > 0, compressedBytes > 0, compressedBytes < originalBytes else {
+            return "--"
+        }
+        let savedRatio = 1 - (Double(compressedBytes) / Double(originalBytes))
+        return AppLocalizer.string("%@ smaller", "\(Int((savedRatio * 100).rounded()))%")
     }
 
     private func saveFailureMessage(for result: Result<Void, Error>) -> String {
@@ -328,6 +402,8 @@ private struct CompressorImagePicker: UIViewControllerRepresentable {
     @Binding var originalSizeText: String
     @Binding var compressedImage: UIImage?
     @Binding var compressedSizeText: String
+    @Binding var originalBytes: Int64
+    @Binding var compressedBytes: Int64
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -356,8 +432,10 @@ private struct CompressorImagePicker: UIViewControllerRepresentable {
                     self.parent.image = image
                     self.parent.compressedImage = nil
                     if let data = image.jpegData(compressionQuality: 1) {
+                        self.parent.originalBytes = Int64(data.count)
                         self.parent.originalSizeText = ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
                     }
+                    self.parent.compressedBytes = 0
                     self.parent.compressedSizeText = "--"
                 }
             }

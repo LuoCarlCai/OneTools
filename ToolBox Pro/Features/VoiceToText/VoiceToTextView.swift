@@ -13,6 +13,8 @@ struct VoiceToTextView: View {
     @State private var selectedLanguage: VoiceLanguage = .english
     @State private var copyMessage = ""
     @State private var copyMessageTint = AppColor.success
+    @State private var isShowingShareSheet = false
+    @State private var shareItems: [Any] = []
     @State private var historyRecords: [TaggedHistoryRecord] = []
     @State private var isLocked = false
     @State private var remainingUses = 0
@@ -77,6 +79,12 @@ struct VoiceToTextView: View {
             recorder.transcript = ""
             copyMessage = ""
         }
+        .background(
+            ShareSheetPresenter(
+                isPresented: $isShowingShareSheet,
+                items: shareItems
+            )
+        )
     }
 
     private var introCard: some View {
@@ -216,20 +224,28 @@ struct VoiceToTextView: View {
                 .background(AppColor.background)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-            HStack(spacing: 12) {
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 2)
+
+            LazyVGrid(columns: columns, spacing: 12) {
                 Button(AppLocalizer.string("Copy")) { copyTranscript() }
                     .buttonStyle(VoiceActionButtonStyle(color: AppColor.primary))
                     .disabled(currentTranscript.isEmpty)
 
-                if !currentTranscript.isEmpty {
-                    Button(AppLocalizer.string("Save")) {
-                        if saveCurrentTranscriptIfNeeded(showFeedback: true) {
-                            AppFeedback.success()
-                        }
+                Button(AppLocalizer.string("Share")) { shareTranscript() }
+                    .buttonStyle(VoiceActionButtonStyle(color: AppColor.warning))
+                    .disabled(currentTranscript.isEmpty)
+
+                Button(AppLocalizer.string("Export TXT")) { exportTranscript() }
+                    .buttonStyle(VoiceActionButtonStyle(color: Color(hex: 0x6366F1)))
+                    .disabled(currentTranscript.isEmpty)
+
+                Button(AppLocalizer.string("Save")) {
+                    if saveCurrentTranscriptIfNeeded(showFeedback: true) {
+                        AppFeedback.success()
                     }
-                    .buttonStyle(VoiceActionButtonStyle(color: AppColor.success))
-                    .disabled(!saveTranscriptHistoryEnabled || currentTranscript.isEmpty)
                 }
+                .buttonStyle(VoiceActionButtonStyle(color: AppColor.success))
+                .disabled(!saveTranscriptHistoryEnabled || currentTranscript.isEmpty)
             }
 
             if !copyMessage.isEmpty {
@@ -352,6 +368,39 @@ struct VoiceToTextView: View {
         AppFeedback.success()
         copyMessage = AppLocalizer.string("Copied to clipboard.")
         copyMessageTint = AppColor.success
+    }
+
+    private func shareTranscript() {
+        guard !currentTranscript.isEmpty else { return }
+        AppFeedback.action()
+        shareItems = [currentTranscript]
+        isShowingShareSheet = true
+    }
+
+    private func exportTranscript() {
+        guard !currentTranscript.isEmpty else { return }
+        guard let url = exportTranscriptFileURL() else {
+            copyMessage = AppLocalizer.string("Could not prepare the text file.")
+            copyMessageTint = AppColor.warning
+            return
+        }
+        AppFeedback.action()
+        shareItems = [url]
+        isShowingShareSheet = true
+    }
+
+    private func exportTranscriptFileURL() -> URL? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm"
+        let filename = "OneTools-Transcript-\(formatter.string(from: Date())).txt"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+
+        do {
+            try currentTranscript.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            return nil
+        }
     }
 
     private func saveCurrentTranscriptIfNeeded(showFeedback: Bool) -> Bool {

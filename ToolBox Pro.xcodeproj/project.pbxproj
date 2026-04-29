@@ -10,22 +10,9 @@
 		F772FA1C2F88D3FD00320564 /* ToolBox Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ToolBox Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F772FCC22F8F381B00320564 /* Exceptions for "ToolBox Pro" folder in "ToolBox Pro" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"ToolBox-Pro-Info.plist",
-			);
-			target = F772FA1B2F88D3FD00320564 /* ToolBox Pro */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F772FA1E2F88D3FD00320564 /* ToolBox Pro */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F772FCC22F8F381B00320564 /* Exceptions for "ToolBox Pro" folder in "ToolBox Pro" target */,
-			);
 			path = "ToolBox Pro";
 			sourceTree = "<group>";
 		};

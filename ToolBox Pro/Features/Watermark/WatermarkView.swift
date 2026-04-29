@@ -6,6 +6,60 @@ import UIKit
 struct WatermarkView: View {
     @EnvironmentObject private var purchaseStore: PurchaseStore
     @StateObject private var photoSaver = PhotoLibrarySaver()
+    enum WatermarkFontStyle: String, CaseIterable, Identifiable {
+        case system
+        case rounded
+        case serif
+        case monospaced
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .system: return AppLocalizer.string("System")
+            case .rounded: return AppLocalizer.string("Rounded")
+            case .serif: return AppLocalizer.string("Serif")
+            case .monospaced: return AppLocalizer.string("Monospace")
+            }
+        }
+
+        func swiftUIFont(size: CGFloat) -> Font {
+            switch self {
+            case .system:
+                return .system(size: size, weight: .bold)
+            case .rounded:
+                return .system(size: size, weight: .bold, design: .rounded)
+            case .serif:
+                return .system(size: size, weight: .bold, design: .serif)
+            case .monospaced:
+                return .system(size: size, weight: .bold, design: .monospaced)
+            }
+        }
+
+        func uiFont(size: CGFloat) -> UIFont {
+            let base = UIFont.systemFont(ofSize: size, weight: .bold)
+            let descriptor = base.fontDescriptor
+
+            let design: UIFontDescriptor.SystemDesign?
+            switch self {
+            case .system:
+                design = nil
+            case .rounded:
+                design = .rounded
+            case .serif:
+                design = .serif
+            case .monospaced:
+                design = .monospaced
+            }
+
+            guard let design,
+                  let styledDescriptor = descriptor.withDesign(design) else {
+                return base
+            }
+            return UIFont(descriptor: styledDescriptor, size: size)
+        }
+    }
+
     enum WatermarkColorStyle: String, CaseIterable, Identifiable {
         case white
         case ocean
@@ -40,13 +94,33 @@ struct WatermarkView: View {
         }
     }
 
+    enum WatermarkLayoutStyle: String, CaseIterable, Identifiable {
+        case floating
+        case tiled
+        case footer
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .floating: return AppLocalizer.string("Floating")
+            case .tiled: return AppLocalizer.string("Tiled")
+            case .footer: return AppLocalizer.string("Footer")
+            }
+        }
+    }
+
     @State private var selectedImage: UIImage?
     @State private var isShowingPicker = false
     @State private var watermarkText = "One Tools"
+    @State private var layoutStyle: WatermarkLayoutStyle = .floating
+    @State private var fontStyle: WatermarkFontStyle = .rounded
     @State private var colorStyle: WatermarkColorStyle = .white
     @State private var textSize = 34.0
     @State private var watermarkScale = 1.0
     @State private var opacity = 0.55
+    @State private var outlineWidth = 0.0
+    @State private var shadowRadius = 2.0
     @State private var rotation = -18.0
     @State private var horizontalPosition = 0.5
     @State private var verticalPosition = 0.5
@@ -136,7 +210,7 @@ struct WatermarkView: View {
 
     private var watermarkSummary: some View {
         HStack(spacing: 12) {
-            summaryPill(title: AppLocalizer.string("Style"), value: colorStyle.title)
+            summaryPill(title: AppLocalizer.string("Layout"), value: layoutStyle.title)
             summaryPill(title: AppLocalizer.string("Opacity"), value: "\(Int((safeOpacity * 100).rounded()))%")
             summaryPill(title: AppLocalizer.string("Angle"), value: "\(Int(safeRotation.rounded()))°")
         }
@@ -169,7 +243,7 @@ struct WatermarkView: View {
                             .scaledToFit()
                             .frame(width: proxy.size.width, height: proxy.size.height)
                             .overlay(alignment: .topLeading) {
-                                watermark(in: imageFrame.size)
+                                watermarkContent(in: imageFrame.size)
                                     .frame(width: imageFrame.size.width, height: imageFrame.size.height)
                                     .offset(x: imageFrame.origin.x, y: imageFrame.origin.y)
                             }
@@ -222,10 +296,14 @@ struct WatermarkView: View {
                         .stroke(AppColor.border, lineWidth: 1)
                 )
 
+            layoutPickerRow
+            fontPickerRow
             colorPickerRow
 
             SliderRow(title: AppLocalizer.string("Opacity"), value: $opacity, range: 0.15...1.0)
             SliderRow(title: AppLocalizer.string("Base Size"), value: $textSize, range: 16...82)
+            SliderRow(title: AppLocalizer.string("Outline"), value: $outlineWidth, range: 0...8)
+            SliderRow(title: AppLocalizer.string("Shadow"), value: $shadowRadius, range: 0...12)
 
             Button(AppLocalizer.string("Reset Placement")) {
                 AppFeedback.selection()
@@ -233,7 +311,7 @@ struct WatermarkView: View {
             }
             .buttonStyle(WatermarkSecondaryButtonStyle(color: AppColor.primary))
 
-            Text(AppLocalizer.string("Drag the watermark to move it. Pinch to resize and rotate with two fingers directly on the preview."))
+            Text(layoutHint)
                 .appFont(size: 13, weight: .regular)
                 .foregroundColor(AppColor.secondaryText)
         }
@@ -272,14 +350,54 @@ struct WatermarkView: View {
         }
     }
 
-    private func watermark(in size: CGSize) -> some View {
-        Text(watermarkText)
-            .appFont(size: currentWatermarkFontSize, weight: .bold)
-            .foregroundColor(colorStyle.color.opacity(safeOpacity))
-            .rotationEffect(currentRotation)
-            .position(currentWatermarkPosition(in: size))
-            .contentShape(Rectangle())
-            .gesture(watermarkGesture(in: size))
+    private func watermarkContent(in size: CGSize) -> some View {
+        Group {
+            switch layoutStyle {
+            case .floating:
+                watermarkTextLayer
+                    .rotationEffect(currentRotation)
+                    .position(currentWatermarkPosition(in: size))
+                    .contentShape(Rectangle())
+                    .gesture(dragGesture(in: size))
+                    .simultaneousGesture(magnificationGesture)
+                    .simultaneousGesture(rotationGesture)
+            case .tiled:
+                tiledWatermark(in: size)
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(magnificationGesture)
+                    .simultaneousGesture(rotationGesture)
+            case .footer:
+                footerWatermark(in: size)
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(magnificationGesture)
+            }
+        }
+    }
+
+    private func tiledWatermark(in size: CGSize) -> some View {
+        ZStack {
+            ForEach(Array(tiledPositions(in: size).enumerated()), id: \.offset) { _, point in
+                watermarkTextLayer
+                    .rotationEffect(currentRotation)
+                    .position(point)
+            }
+        }
+    }
+
+    private func footerWatermark(in size: CGSize) -> some View {
+        ZStack(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.black.opacity(0.22))
+                .frame(height: footerBarHeight)
+
+            watermarkTextLayer
+                .scaleEffect(0.9)
+                .padding(.bottom, 14)
+        }
+    }
+
+    private var footerBarHeight: CGFloat {
+        max(56, currentWatermarkFontSize * 2.1)
     }
 
     private func renderedImage() -> UIImage? {
@@ -287,17 +405,14 @@ struct WatermarkView: View {
         let renderer = UIGraphicsImageRenderer(size: image.size)
         return renderer.image { ctx in
             image.draw(in: CGRect(origin: .zero, size: image.size))
-            let textAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: safeTextSize * safeWatermarkScale * 2, weight: .bold),
-                .foregroundColor: colorStyle.uiColor.withAlphaComponent(safeOpacity)
-            ]
-            let attributed = NSAttributedString(string: watermarkText, attributes: textAttributes)
-            ctx.cgContext.translateBy(
-                x: image.size.width * safeHorizontalPosition,
-                y: image.size.height * safeVerticalPosition
-            )
-            ctx.cgContext.rotate(by: CGFloat(safeRotation * .pi / 180))
-            attributed.draw(at: CGPoint(x: -attributed.size().width / 2, y: -attributed.size().height / 2))
+            switch layoutStyle {
+            case .floating:
+                drawFloatingWatermark(in: ctx.cgContext, canvasSize: image.size)
+            case .tiled:
+                drawTiledWatermark(in: ctx.cgContext, canvasSize: image.size)
+            case .footer:
+                drawFooterWatermark(in: ctx.cgContext, canvasSize: image.size)
+            }
         }
     }
 
@@ -318,6 +433,119 @@ struct WatermarkView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(AppColor.border, lineWidth: 1)
         )
+    }
+
+    private var watermarkTextLayer: some View {
+        ZStack {
+            if safeOutlineWidth > 0 {
+                ForEach(Array(outlineOffsets.enumerated()), id: \.offset) { _, offset in
+                    watermarkBaseText
+                        .foregroundColor(Color.black.opacity(min(0.9, safeOpacity + 0.15)))
+                        .offset(offset)
+                }
+            }
+
+            watermarkBaseText
+                .foregroundColor(colorStyle.color.opacity(safeOpacity))
+                .shadow(
+                    color: Color.black.opacity(safeShadowRadius > 0 ? 0.35 : 0),
+                    radius: safeShadowRadius,
+                    x: 0,
+                    y: safeShadowRadius * 0.35
+                )
+        }
+    }
+
+    private var layoutPickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(AppLocalizer.string("Layout"))
+                    .appFont(size: 15, weight: .bold)
+                    .foregroundColor(AppColor.primaryText)
+                Spacer()
+                Text(layoutStyle.title)
+                    .appFont(size: 14, weight: .medium)
+                    .foregroundColor(AppColor.secondaryText)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(WatermarkLayoutStyle.allCases) { style in
+                    Button {
+                        AppFeedback.selection()
+                        layoutStyle = style
+                    } label: {
+                        Text(style.title)
+                            .appFont(size: 13, weight: .bold)
+                            .foregroundColor(layoutStyle == style ? .white : AppColor.primaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(layoutStyle == style ? AppColor.primary : AppColor.background)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(layoutStyle == style ? AppColor.primary : AppColor.border, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var watermarkBaseText: some View {
+        Text(watermarkText)
+            .font(fontStyle.swiftUIFont(size: currentWatermarkFontSize))
+            .fontWeight(.bold)
+    }
+
+    private var outlineOffsets: [CGSize] {
+        let distance = max(1, safeOutlineWidth * 0.85)
+        return [
+            CGSize(width: -distance, height: 0),
+            CGSize(width: distance, height: 0),
+            CGSize(width: 0, height: -distance),
+            CGSize(width: 0, height: distance),
+            CGSize(width: -distance, height: -distance),
+            CGSize(width: distance, height: -distance),
+            CGSize(width: -distance, height: distance),
+            CGSize(width: distance, height: distance)
+        ]
+    }
+
+    private var fontPickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(AppLocalizer.string("Font"))
+                    .appFont(size: 15, weight: .bold)
+                    .foregroundColor(AppColor.primaryText)
+                Spacer()
+                Text(fontStyle.title)
+                    .appFont(size: 14, weight: .medium)
+                    .foregroundColor(AppColor.secondaryText)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(WatermarkFontStyle.allCases) { style in
+                    Button {
+                        AppFeedback.selection()
+                        fontStyle = style
+                    } label: {
+                        Text(style.title)
+                            .font(style.swiftUIFont(size: 13))
+                            .foregroundColor(fontStyle == style ? .white : AppColor.primaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(fontStyle == style ? AppColor.primary : AppColor.background)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(fontStyle == style ? AppColor.primary : AppColor.border, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     private var colorPickerRow: some View {
@@ -398,6 +626,14 @@ struct WatermarkView: View {
         opacity.isFinite ? min(max(opacity, 0.15), 1.0) : 0.55
     }
 
+    private var safeOutlineWidth: Double {
+        outlineWidth.isFinite ? min(max(outlineWidth, 0), 8) : 0
+    }
+
+    private var safeShadowRadius: Double {
+        shadowRadius.isFinite ? min(max(shadowRadius, 0), 12) : 2
+    }
+
     private var safeTextSize: Double {
         textSize.isFinite ? min(max(textSize, 16), 82) : 34
     }
@@ -434,6 +670,17 @@ struct WatermarkView: View {
         )
     }
 
+    private var layoutHint: String {
+        switch layoutStyle {
+        case .floating:
+            return AppLocalizer.string("Drag the watermark to move it. Pinch to resize and rotate with two fingers directly on the preview.")
+        case .tiled:
+            return AppLocalizer.string("Repeat the watermark across the image. Pinch to resize and rotate the pattern.")
+        case .footer:
+            return AppLocalizer.string("Use a clean signature band at the bottom of the image.")
+        }
+    }
+
     private func currentWatermarkPosition(in size: CGSize) -> CGPoint {
         let x = (size.width * safeHorizontalPosition) + safeGestureTranslation.width
         let y = (size.height * safeVerticalPosition) + safeGestureTranslation.height
@@ -441,12 +688,6 @@ struct WatermarkView: View {
             x: min(max(x, 0), size.width),
             y: min(max(y, 0), size.height)
         )
-    }
-
-    private func watermarkGesture(in size: CGSize) -> some Gesture {
-        dragGesture(in: size)
-            .simultaneously(with: magnificationGesture)
-            .simultaneously(with: rotationGesture)
     }
 
     private func dragGesture(in size: CGSize) -> some Gesture {
@@ -502,6 +743,88 @@ struct WatermarkView: View {
         rotation = -18
         horizontalPosition = 0.5
         verticalPosition = 0.5
+    }
+
+    private func tiledPositions(in size: CGSize) -> [CGPoint] {
+        let renderFont = fontStyle.uiFont(size: CGFloat(currentWatermarkFontSize))
+        let textSize = (watermarkText as NSString).size(withAttributes: [.font: renderFont])
+        let cellWidth = max(textSize.width + 42, size.width * 0.32)
+        let cellHeight = max(textSize.height + 34, size.height * 0.18)
+        let startX = -cellWidth * 0.4
+        let startY = -cellHeight * 0.2
+        let maxX = size.width + cellWidth
+        let maxY = size.height + cellHeight
+
+        var points: [CGPoint] = []
+        var rowIndex = 0
+        var y = startY
+        while y <= maxY {
+            let rowOffset = rowIndex.isMultiple(of: 2) ? 0 : cellWidth * 0.5
+            var x = startX + rowOffset
+            while x <= maxX {
+                points.append(CGPoint(x: x, y: y))
+                x += cellWidth
+            }
+            rowIndex += 1
+            y += cellHeight
+        }
+        return points
+    }
+
+    private func attributedWatermark(fontSize: CGFloat) -> NSAttributedString {
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(safeShadowRadius > 0 ? 0.35 : 0)
+        shadow.shadowBlurRadius = safeShadowRadius
+        shadow.shadowOffset = CGSize(width: 0, height: safeShadowRadius * 0.35)
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: fontStyle.uiFont(size: fontSize),
+            .foregroundColor: colorStyle.uiColor.withAlphaComponent(safeOpacity),
+            .strokeColor: UIColor.black.withAlphaComponent(safeOutlineWidth > 0 ? min(0.95, safeOpacity + 0.2) : 0),
+            .strokeWidth: -(safeOutlineWidth * 2),
+            .shadow: shadow
+        ]
+
+        return NSAttributedString(string: watermarkText, attributes: attributes)
+    }
+
+    private func drawFloatingWatermark(in context: CGContext, canvasSize: CGSize) {
+        let attributed = attributedWatermark(fontSize: CGFloat(safeTextSize * safeWatermarkScale * 2))
+        context.saveGState()
+        context.translateBy(
+            x: canvasSize.width * safeHorizontalPosition,
+            y: canvasSize.height * safeVerticalPosition
+        )
+        context.rotate(by: CGFloat(safeRotation * .pi / 180))
+        attributed.draw(at: CGPoint(x: -attributed.size().width / 2, y: -attributed.size().height / 2))
+        context.restoreGState()
+    }
+
+    private func drawTiledWatermark(in context: CGContext, canvasSize: CGSize) {
+        let attributed = attributedWatermark(fontSize: CGFloat(safeTextSize * safeWatermarkScale * 1.7))
+        for point in tiledPositions(in: canvasSize) {
+            context.saveGState()
+            context.translateBy(x: point.x, y: point.y)
+            context.rotate(by: CGFloat(safeRotation * .pi / 180))
+            attributed.draw(at: CGPoint(x: -attributed.size().width / 2, y: -attributed.size().height / 2))
+            context.restoreGState()
+        }
+    }
+
+    private func drawFooterWatermark(in context: CGContext, canvasSize: CGSize) {
+        let barHeight = max(72, CGFloat(safeTextSize * safeWatermarkScale * 1.7) * 1.9)
+        let barRect = CGRect(x: 0, y: canvasSize.height - barHeight, width: canvasSize.width, height: barHeight)
+        context.saveGState()
+        context.setFillColor(UIColor.black.withAlphaComponent(0.22).cgColor)
+        context.fill(barRect)
+
+        let attributed = attributedWatermark(fontSize: CGFloat(safeTextSize * safeWatermarkScale * 1.5))
+        let drawPoint = CGPoint(
+            x: (canvasSize.width - attributed.size().width) / 2,
+            y: barRect.midY - (attributed.size().height / 2)
+        )
+        attributed.draw(at: drawPoint)
+        context.restoreGState()
     }
 
     private func performSave() {

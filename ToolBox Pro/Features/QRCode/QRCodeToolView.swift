@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import CoreImage.CIFilterBuiltins
+import PhotosUI
 import UIKit
 
 struct QRCodeToolView: View {
@@ -71,12 +72,130 @@ struct QRCodeToolView: View {
         }
     }
 
+    enum QRBackgroundStyle: String, CaseIterable, Identifiable {
+        case white
+        case cream
+        case mist
+        case midnight
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .white: return AppLocalizer.string("White")
+            case .cream: return AppLocalizer.string("Cream")
+            case .mist: return AppLocalizer.string("Mist")
+            case .midnight: return AppLocalizer.string("Midnight")
+            }
+        }
+
+        var background: UIColor {
+            switch self {
+            case .white: return .white
+            case .cream: return UIColor(red: 0.98, green: 0.95, blue: 0.88, alpha: 1)
+            case .mist: return UIColor(red: 0.92, green: 0.96, blue: 0.99, alpha: 1)
+            case .midnight: return UIColor(red: 0.12, green: 0.16, blue: 0.24, alpha: 1)
+            }
+        }
+
+        var swatch: Color {
+            Color(uiColor: background)
+        }
+    }
+
+    enum QRExportSize: String, CaseIterable, Identifiable {
+        case compact
+        case standard
+        case large
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .compact: return AppLocalizer.string("Compact")
+            case .standard: return AppLocalizer.string("Standard")
+            case .large: return AppLocalizer.string("Large")
+            }
+        }
+
+        var dimension: CGFloat {
+            switch self {
+            case .compact: return 768
+            case .standard: return 1536
+            case .large: return 2048
+            }
+        }
+    }
+
+    enum QRModuleStyle: String, CaseIterable, Identifiable {
+        case sharp
+        case rounded
+        case dots
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .sharp: return AppLocalizer.string("Sharp")
+            case .rounded: return AppLocalizer.string("Rounded")
+            case .dots: return AppLocalizer.string("Dots")
+            }
+        }
+    }
+
+    enum QRPaddingStyle: String, CaseIterable, Identifiable {
+        case tight
+        case balanced
+        case roomy
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .tight: return AppLocalizer.string("Tight")
+            case .balanced: return AppLocalizer.string("Balanced")
+            case .roomy: return AppLocalizer.string("Roomy")
+            }
+        }
+
+        var insetRatio: CGFloat {
+            switch self {
+            case .tight: return 0.08
+            case .balanced: return 0.13
+            case .roomy: return 0.18
+            }
+        }
+    }
+
+    enum QRBorderStyle: String, CaseIterable, Identifiable {
+        case none
+        case outline
+        case card
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .none: return AppLocalizer.string("None")
+            case .outline: return AppLocalizer.string("Outline")
+            case .card: return AppLocalizer.string("Card")
+            }
+        }
+    }
+
     @State private var mode: Int
     @State private var generateKind: GenerateKind = .text
     @State private var colorStyle: QRColorStyle = .classic
+    @State private var backgroundStyle: QRBackgroundStyle = .white
+    @State private var moduleStyle: QRModuleStyle = .sharp
+    @State private var paddingStyle: QRPaddingStyle = .balanced
+    @State private var borderStyle: QRBorderStyle = .none
+    @State private var exportSize: QRExportSize = .standard
     @State private var text = ""
+    @State private var logoImage: UIImage?
     @State private var scanResult = ""
     @State private var isShowingShareSheet = false
+    @State private var isShowingLogoPicker = false
     @State private var shareImage: UIImage?
     @State private var saveMessage = ""
     @State private var saveMessageTint = AppColor.success
@@ -177,6 +296,9 @@ struct QRCodeToolView: View {
                 items: shareImage.map { [$0] } ?? []
             )
         )
+        .sheet(isPresented: $isShowingLogoPicker) {
+            QRLogoPicker(image: $logoImage)
+        }
     }
 
     private var modeSummary: some View {
@@ -226,6 +348,12 @@ struct QRCodeToolView: View {
                         .foregroundColor(AppColor.secondaryText)
 
                     colorPickerRow
+                    backgroundPickerRow
+                    moduleStylePickerRow
+                    paddingPickerRow
+                    borderPickerRow
+                    logoPickerRow
+                    exportSizePickerRow
                 }
                 .padding(16)
                 .background(AppColor.surface)
@@ -236,15 +364,13 @@ struct QRCodeToolView: View {
                 )
 
                 VStack(spacing: 14) {
-                    if let image = qrImage {
+                    if let image = qrPreviewImage {
                         Image(uiImage: image)
                             .interpolation(.none)
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 240, height: 240)
-                            .padding(20)
-                            .background(AppColor.surface)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .frame(width: 280, height: 280)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     } else {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .fill(AppColor.surface)
@@ -260,8 +386,8 @@ struct QRCodeToolView: View {
                     HStack(spacing: 12) {
                         Button(AppLocalizer.string("Save")) {
                             guard consumeGenerateUseIfNeeded() else { return }
-                            if let qrImage {
-                                photoSaver.save(qrImage) { result in
+                            if let exportImage {
+                                photoSaver.save(exportImage) { result in
                                     switch result {
                                     case .success:
                                         AppFeedback.success()
@@ -287,13 +413,13 @@ struct QRCodeToolView: View {
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .stroke(AppColor.border, lineWidth: 1)
                         )
-                        .disabled(qrImage == nil)
+                        .disabled(exportImage == nil)
 
                         Button(AppLocalizer.string("Share")) {
                             guard consumeGenerateUseIfNeeded() else { return }
                             AppFeedback.action()
-                            shareImage = qrImage
-                            isShowingShareSheet = qrImage != nil
+                            shareImage = exportImage
+                            isShowingShareSheet = exportImage != nil
                         }
                         .appFont(size: 16, weight: .bold)
                         .foregroundColor(.white)
@@ -301,7 +427,7 @@ struct QRCodeToolView: View {
                         .padding(.vertical, 14)
                         .background(AppColor.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .disabled(qrImage == nil)
+                        .disabled(exportImage == nil)
                     }
 
                     if !saveMessage.isEmpty {
@@ -557,28 +683,412 @@ struct QRCodeToolView: View {
         }
     }
 
-    private var qrImage: UIImage? {
+    private var backgroundPickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(AppLocalizer.string("Background"))
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+
+            HStack(spacing: 10) {
+                ForEach(QRBackgroundStyle.allCases) { style in
+                    Button {
+                        AppFeedback.selection()
+                        backgroundStyle = style
+                    } label: {
+                        VStack(spacing: 6) {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(style.swatch)
+                                .frame(width: 30, height: 30)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(style == .white ? AppColor.border : Color.white.opacity(0.8), lineWidth: 1.5)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(backgroundStyle == style ? AppColor.primary : .clear, lineWidth: 2.5)
+                                        .padding(-4)
+                                )
+                            Text(style.title)
+                                .appFont(size: 11, weight: .medium)
+                                .foregroundColor(backgroundStyle == style ? AppColor.primaryText : AppColor.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(AppColor.background)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(backgroundStyle == style ? style.swatch.opacity(0.95) : AppColor.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var logoPickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(AppLocalizer.string("Logo"))
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+
+            Text(AppLocalizer.string("Add a centered logo for a branded QR code."))
+                .appFont(size: 13, weight: .regular)
+                .foregroundColor(AppColor.secondaryText)
+
+            HStack(spacing: 12) {
+                Button {
+                    AppFeedback.selection()
+                    isShowingLogoPicker = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "photo")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text(logoImage == nil ? AppLocalizer.string("Add Logo") : AppLocalizer.string("Change"))
+                            .appFont(size: 14, weight: .bold)
+                    }
+                    .foregroundColor(AppColor.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(AppColor.background)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(AppColor.border, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                if let logoImage {
+                    HStack(spacing: 10) {
+                        Image(uiImage: logoImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 34, height: 34)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                        Button(AppLocalizer.string("Remove")) {
+                            AppFeedback.selection()
+                            self.logoImage = nil
+                        }
+                        .appFont(size: 13, weight: .bold)
+                        .foregroundColor(AppColor.warning)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(AppColor.background)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(AppColor.border, lineWidth: 1)
+                    )
+                }
+            }
+        }
+    }
+
+    private var moduleStylePickerRow: some View {
+        optionRow(
+            title: AppLocalizer.string("Module Style"),
+            options: QRModuleStyle.allCases,
+            selected: moduleStyle,
+            selectionTitle: \.title
+        ) { style in
+            moduleStyle = style
+        }
+    }
+
+    private var paddingPickerRow: some View {
+        optionRow(
+            title: AppLocalizer.string("Padding"),
+            options: QRPaddingStyle.allCases,
+            selected: paddingStyle,
+            selectionTitle: \.title
+        ) { style in
+            paddingStyle = style
+        }
+    }
+
+    private var borderPickerRow: some View {
+        optionRow(
+            title: AppLocalizer.string("Border"),
+            options: QRBorderStyle.allCases,
+            selected: borderStyle,
+            selectionTitle: \.title
+        ) { style in
+            borderStyle = style
+        }
+    }
+
+    private var exportSizePickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(AppLocalizer.string("Export Size"))
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+
+            Text(AppLocalizer.string("Save and share the QR image at a higher resolution."))
+                .appFont(size: 13, weight: .regular)
+                .foregroundColor(AppColor.secondaryText)
+
+            HStack(spacing: 10) {
+                ForEach(QRExportSize.allCases) { size in
+                    Button {
+                        AppFeedback.selection()
+                        exportSize = size
+                    } label: {
+                        Text(size.title)
+                            .appFont(size: 13, weight: .bold)
+                            .foregroundColor(exportSize == size ? AppColor.primaryText : AppColor.secondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(AppColor.background)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(exportSize == size ? AppColor.primary : AppColor.border, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var qrPreviewImage: UIImage? {
+        renderedQRCodeImage(dimension: 1200)
+    }
+
+    private var exportImage: UIImage? {
+        renderedQRCodeImage(dimension: exportSize.dimension)
+    }
+
+    private var qrMatrix: (modules: [Bool], side: Int)? {
         guard let payload = qrPayload else { return nil }
         filter.setValue(Data(payload.utf8), forKey: "inputMessage")
-        filter.setValue("M", forKey: "inputCorrectionLevel")
+        filter.setValue("H", forKey: "inputCorrectionLevel")
         guard let outputImage = filter.outputImage else {
             return nil
         }
 
-        let falseColorFilter = CIFilter.falseColor()
-        falseColorFilter.inputImage = outputImage
-        falseColorFilter.color0 = CIColor(color: colorStyle.foreground)
-        falseColorFilter.color1 = CIColor(color: .white)
-
-        guard let coloredImage = falseColorFilter.outputImage else {
+        let extent = outputImage.extent.integral
+        guard let cgImage = context.createCGImage(outputImage, from: extent),
+              let data = cgImage.dataProvider?.data,
+              let bytePointer = CFDataGetBytePtr(data) else {
             return nil
         }
 
-        let scaledImage = coloredImage.transformed(by: CGAffineTransform(scaleX: 12, y: 12))
-        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent.integral) else {
+        let width = cgImage.width
+        let height = cgImage.height
+        let bytesPerPixel = max(1, cgImage.bitsPerPixel / 8)
+        let bytesPerRow = cgImage.bytesPerRow
+        var modules: [Bool] = []
+        modules.reserveCapacity(width * height)
+
+        for row in 0..<height {
+            for column in 0..<width {
+                let offset = row * bytesPerRow + column * bytesPerPixel
+                let isDark: Bool
+                if bytesPerPixel >= 3 {
+                    let red = Int(bytePointer[offset])
+                    let green = Int(bytePointer[offset + 1])
+                    let blue = Int(bytePointer[offset + 2])
+                    isDark = red + green + blue < 382
+                } else {
+                    isDark = bytePointer[offset] < 128
+                }
+                modules.append(isDark)
+            }
+        }
+
+        guard width == height else {
             return nil
         }
-        return UIImage(cgImage: cgImage)
+
+        return (modules, width)
+    }
+
+    private func renderedQRCodeImage(dimension: CGFloat) -> UIImage? {
+        guard let qrMatrix else {
+            return nil
+        }
+
+        let canvasSize = CGSize(width: dimension, height: dimension)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+
+        return UIGraphicsImageRenderer(size: canvasSize, format: format).image { rendererContext in
+            let context = rendererContext.cgContext
+            let canvasRect = CGRect(origin: .zero, size: canvasSize)
+            let frameRect = decoratedFrameRect(in: canvasRect)
+            let qrRect = qrDrawingRect(in: frameRect)
+
+            context.setFillColor(backgroundStyle.background.cgColor)
+            context.fill(canvasRect)
+            drawBorder(in: frameRect, canvasRect: canvasRect, context: context)
+            drawModules(qrMatrix, in: qrRect, context: context)
+
+            if let logoImage {
+                drawLogo(logoImage, in: qrRect, context: context)
+            }
+        }
+    }
+
+    private func decoratedFrameRect(in canvasRect: CGRect) -> CGRect {
+        switch borderStyle {
+        case .none:
+            return canvasRect
+        case .outline:
+            return canvasRect.insetBy(dx: canvasRect.width * 0.035, dy: canvasRect.height * 0.035)
+        case .card:
+            return canvasRect.insetBy(dx: canvasRect.width * 0.055, dy: canvasRect.height * 0.055)
+        }
+    }
+
+    private func qrDrawingRect(in frameRect: CGRect) -> CGRect {
+        let inset = frameRect.width * paddingStyle.insetRatio
+        return frameRect.insetBy(dx: inset, dy: inset)
+    }
+
+    private func drawBorder(in frameRect: CGRect, canvasRect: CGRect, context: CGContext) {
+        guard borderStyle != .none else { return }
+
+        let cornerRadius = frameRect.width * 0.12
+        let path = UIBezierPath(roundedRect: frameRect, cornerRadius: cornerRadius)
+
+        if borderStyle == .card {
+            let fillColor: UIColor
+            if backgroundStyle == .midnight {
+                fillColor = UIColor.white.withAlphaComponent(0.09)
+            } else {
+                fillColor = UIColor.black.withAlphaComponent(0.035)
+            }
+            context.setFillColor(fillColor.cgColor)
+            context.addPath(path.cgPath)
+            context.drawPath(using: .fill)
+        }
+
+        let strokeColor = colorStyle.foreground.withAlphaComponent(borderStyle == .outline ? 0.18 : 0.12)
+        context.setStrokeColor(strokeColor.cgColor)
+        context.setLineWidth(canvasRect.width * 0.012)
+        context.addPath(path.cgPath)
+        context.strokePath()
+    }
+
+    private func drawModules(_ matrix: (modules: [Bool], side: Int), in rect: CGRect, context: CGContext) {
+        let moduleSize = rect.width / CGFloat(matrix.side)
+        let fillColor = colorStyle.foreground.cgColor
+        context.setFillColor(fillColor)
+
+        for row in 0..<matrix.side {
+            for column in 0..<matrix.side {
+                let index = row * matrix.side + column
+                guard matrix.modules[index] else { continue }
+
+                let moduleRect = CGRect(
+                    x: rect.minX + CGFloat(column) * moduleSize,
+                    y: rect.minY + CGFloat(row) * moduleSize,
+                    width: moduleSize,
+                    height: moduleSize
+                )
+
+                let protectedModule = isFinderModule(row: row, column: column, side: matrix.side)
+                drawModule(in: moduleRect, protectedModule: protectedModule, context: context)
+            }
+        }
+    }
+
+    private func drawModule(in rect: CGRect, protectedModule: Bool, context: CGContext) {
+        let appliedStyle: QRModuleStyle = protectedModule && moduleStyle == .dots ? .rounded : moduleStyle
+
+        switch appliedStyle {
+        case .sharp:
+            context.fill(rect)
+        case .rounded:
+            let inset = rect.width * 0.06
+            let drawRect = rect.insetBy(dx: inset, dy: inset)
+            let path = UIBezierPath(roundedRect: drawRect, cornerRadius: drawRect.width * 0.28)
+            context.addPath(path.cgPath)
+            context.drawPath(using: .fill)
+        case .dots:
+            let inset = rect.width * 0.18
+            let drawRect = rect.insetBy(dx: inset, dy: inset)
+            context.fillEllipse(in: drawRect)
+        }
+    }
+
+    private func isFinderModule(row: Int, column: Int, side: Int) -> Bool {
+        let area = 8
+        let top = row < area
+        let bottom = row >= side - area
+        let left = column < area
+        let right = column >= side - area
+        return (top && left) || (top && right) || (bottom && left)
+    }
+
+    private func drawLogo(_ image: UIImage, in qrRect: CGRect, context: CGContext) {
+        let cardSide = qrRect.width * 0.26
+        let imageSide = cardSide * 0.66
+        let cardRect = CGRect(
+            x: qrRect.midX - (cardSide / 2),
+            y: qrRect.midY - (cardSide / 2),
+            width: cardSide,
+            height: cardSide
+        )
+
+        context.setFillColor(UIColor.white.cgColor)
+        let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: cardSide * 0.24)
+        context.addPath(cardPath.cgPath)
+        context.drawPath(using: .fill)
+
+        let imageRect = CGRect(
+            x: qrRect.midX - (imageSide / 2),
+            y: qrRect.midY - (imageSide / 2),
+            width: imageSide,
+            height: imageSide
+        )
+        let imagePath = UIBezierPath(roundedRect: imageRect, cornerRadius: imageSide * 0.24)
+        context.saveGState()
+        context.addPath(imagePath.cgPath)
+        context.clip()
+        image.draw(in: imageRect)
+        context.restoreGState()
+    }
+
+    private func optionRow<Option: Identifiable & Equatable>(
+        title: String,
+        options: [Option],
+        selected: Option,
+        selectionTitle: KeyPath<Option, String>,
+        onSelect: @escaping (Option) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .appFont(size: 14, weight: .bold)
+                .foregroundColor(AppColor.primaryText)
+
+            HStack(spacing: 10) {
+                ForEach(options) { option in
+                    Button {
+                        AppFeedback.selection()
+                        onSelect(option)
+                    } label: {
+                        Text(option[keyPath: selectionTitle])
+                            .appFont(size: 13, weight: .bold)
+                            .foregroundColor(selected == option ? AppColor.primaryText : AppColor.secondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(AppColor.background)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(selected == option ? AppColor.primary : AppColor.border, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     private var qrPayload: String? {
@@ -644,35 +1154,43 @@ private extension View {
     }
 }
 
-private struct ShareSheetPresenter: UIViewControllerRepresentable {
-    @Binding var isPresented: Bool
-    let items: [Any]
+private struct QRLogoPicker: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
 
-    func makeUIViewController(context: Context) -> UIViewController {
-        UIViewController()
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        guard isPresented, uiViewController.presentedViewController == nil, !items.isEmpty else { return }
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.filter = .images
+        configuration.selectionLimit = 1
+        let controller = PHPickerViewController(configuration: configuration)
+        controller.delegate = context.coordinator
+        return controller
+    }
 
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        controller.completionWithItemsHandler = { _, _, _, _ in
-            isPresented = false
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        private let parent: QRLogoPicker
+
+        init(_ parent: QRLogoPicker) {
+            self.parent = parent
         }
 
-        if let popover = controller.popoverPresentationController {
-            popover.sourceView = uiViewController.view
-            popover.sourceRect = CGRect(
-                x: uiViewController.view.bounds.midX,
-                y: uiViewController.view.bounds.maxY - 1,
-                width: 1,
-                height: 1
-            )
-            popover.permittedArrowDirections = []
-        }
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
 
-        DispatchQueue.main.async {
-            uiViewController.present(controller, animated: true)
+            guard let result = results.first else { return }
+            guard result.itemProvider.canLoadObject(ofClass: UIImage.self) else { return }
+
+            result.itemProvider.loadObject(ofClass: UIImage.self) { object, _ in
+                guard let image = object as? UIImage else { return }
+                DispatchQueue.main.async {
+                    self.parent.image = image
+                }
+            }
         }
     }
 }

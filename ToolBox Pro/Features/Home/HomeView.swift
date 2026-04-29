@@ -4,10 +4,25 @@ struct HomeView: View {
     @EnvironmentObject private var purchaseStore: PurchaseStore
     @AppStorage("calculatorHistory") private var calculatorHistory = ""
     @AppStorage("voiceToTextHistory") private var voiceToTextHistory = ""
+    @AppStorage("recentToolIDs") private var recentToolIDs = ""
+    @State private var searchText = ""
 
     private var tools: [ToolItem] { ToolItem.all }
     private var primaryTools: [ToolItem] { Array(tools.prefix(3)) }
     private var secondaryTools: [ToolItem] { Array(tools.dropFirst(3)) }
+    private var recentTools: [ToolItem] {
+        RecentToolStorage.loadToolIDs(from: recentToolIDs)
+            .compactMap { id in tools.first(where: { $0.id == id }) }
+    }
+    private var filteredTools: [ToolItem] {
+        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !keyword.isEmpty else { return tools }
+        return tools.filter {
+            [$0.title, $0.subtitle, $0.description]
+                .joined(separator: " ")
+                .localizedCaseInsensitiveContains(keyword)
+        }
+    }
     private var latestCalculation: TaggedHistoryRecord? { HistoryStorage.loadRecords(from: calculatorHistory).first }
     private var latestTranscript: TaggedHistoryRecord? { HistoryStorage.loadRecords(from: voiceToTextHistory).first }
 
@@ -18,11 +33,17 @@ struct HomeView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 30) {
                     editorialHeader
-                    spotlightSection
-                    quickLaunchSection
-                    primaryCollectionSection
-                    utilityCollectionSection
-                    recentActivitySection
+                    searchSection
+                    if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        spotlightSection
+                        quickLaunchSection
+                        recentToolsSection
+                        primaryCollectionSection
+                        utilityCollectionSection
+                        recentActivitySection
+                    } else {
+                        searchResultsSection
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -42,6 +63,42 @@ struct HomeView: View {
         //         .feedbackOnTap()
         //     }
         // }
+    }
+
+    private var searchSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(AppColor.secondaryText)
+
+                TextField(AppLocalizer.string("Search tools"), text: $searchText)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+
+                if !searchText.isEmpty {
+                    Button {
+                        AppFeedback.selection()
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(AppColor.secondaryText)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 13)
+            .background(AppColor.surface.opacity(0.94))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
+            )
+
+            Text(AppLocalizer.string("Find a tool by name or task."))
+                .appFont(size: 13, weight: .medium)
+                .foregroundColor(AppColor.secondaryText)
+        }
     }
 
     private var editorialHeader: some View {
@@ -141,13 +198,16 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .feedbackOnTap(.action)
+        .simultaneousGesture(TapGesture().onEnded {
+            recordRecentTool("qr-toolkit")
+        })
     }
 
     private var quickLaunchSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeader(
                 eyebrow: AppLocalizer.string("Quick Launch"),
-                title: AppLocalizer.string("Use most often")
+                title: AppLocalizer.string("Most opened")
             )
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -163,6 +223,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .feedbackOnTap()
+                    .simultaneousGesture(TapGesture().onEnded {
+                        recordRecentTool("calculator")
+                    })
 
                     NavigationLink(destination: UnitConverterView().hidesTabBarOnPush()) {
                         QuickLaunchCard(
@@ -175,6 +238,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .feedbackOnTap()
+                    .simultaneousGesture(TapGesture().onEnded {
+                        recordRecentTool("unit-converter")
+                    })
 
                     NavigationLink(destination: VoiceToTextView().hidesTabBarOnPush()) {
                         QuickLaunchCard(
@@ -187,8 +253,46 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .feedbackOnTap()
+                    .simultaneousGesture(TapGesture().onEnded {
+                        recordRecentTool("speech-to-text")
+                    })
                 }
                 .padding(.horizontal, 1)
+            }
+        }
+    }
+
+    private var recentToolsSection: some View {
+        Group {
+            if !recentTools.isEmpty {
+                VStack(alignment: .leading, spacing: 14) {
+                    sectionHeader(
+                        eyebrow: AppLocalizer.string("Recent Tools"),
+                        title: AppLocalizer.string("Open again quickly")
+                    )
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(recentTools.prefix(4)) { tool in
+                                NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
+                                    QuickLaunchCard(
+                                        eyebrow: AppLocalizer.string("Recent"),
+                                        title: tool.title,
+                                        detail: tool.description,
+                                        symbol: tool.symbol,
+                                        tint: tool.color
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .feedbackOnTap()
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    recordRecentTool(tool.id)
+                                })
+                            }
+                        }
+                        .padding(.horizontal, 1)
+                    }
+                }
             }
         }
     }
@@ -207,6 +311,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .feedbackOnTap()
+                    .simultaneousGesture(TapGesture().onEnded {
+                        recordRecentTool(tool.id)
+                    })
                 }
             }
         }
@@ -226,6 +333,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .feedbackOnTap()
+                    .simultaneousGesture(TapGesture().onEnded {
+                        recordRecentTool(tool.id)
+                    })
                 }
             }
         }
@@ -279,6 +389,53 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    private var searchResultsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader(
+                eyebrow: AppLocalizer.string("Results"),
+                title: AppLocalizer.string("Matching tools")
+            )
+
+            if filteredTools.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(AppLocalizer.string("No matching tools"))
+                        .appFont(size: 16, weight: .bold)
+                        .foregroundColor(AppColor.primaryText)
+
+                    Text(AppLocalizer.string("Try another keyword like QR, image, voice, or calculator."))
+                        .appFont(size: 14, weight: .regular)
+                        .foregroundColor(AppColor.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
+                .background(AppColor.surface.opacity(0.94))
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
+                )
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(filteredTools) { tool in
+                        NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
+                            HomeListCard(tool: tool)
+                        }
+                        .buttonStyle(.plain)
+                        .feedbackOnTap()
+                        .simultaneousGesture(TapGesture().onEnded {
+                            recordRecentTool(tool.id)
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    private func recordRecentTool(_ id: String) {
+        recentToolIDs = RecentToolStorage.register(id, in: recentToolIDs)
     }
 
     private func sectionHeader(eyebrow: String, title: String) -> some View {
@@ -391,20 +548,26 @@ private struct QuickLaunchCard: View {
     let symbol: String
     let tint: Color
 
+    private let cardWidth: CGFloat = 214
+    private let cardHeight: CGFloat = 196
+    private let footerHeight: CGFloat = 56
+    private var contentHeight: CGFloat { cardHeight - footerHeight }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
+                HStack(alignment: .top, spacing: 12) {
                     Text(eyebrow.uppercased())
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(tint)
                         .tracking(0.6)
+                        .lineLimit(1)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(tint.opacity(0.10))
                         .clipShape(Capsule())
 
-                    Spacer()
+                    Spacer(minLength: 8)
 
                     ZStack {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -417,22 +580,29 @@ private struct QuickLaunchCard: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(title)
                         .appFont(size: 18, weight: .bold)
                         .foregroundColor(AppColor.primaryText)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(detail)
                         .appFont(size: 13, weight: .regular)
                         .foregroundColor(AppColor.secondaryText)
-                        .lineLimit(3)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, minHeight: 34, alignment: .topLeading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                Spacer(minLength: 0)
             }
             .padding(16)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, minHeight: contentHeight, maxHeight: contentHeight, alignment: .topLeading)
 
             HStack {
                 Text(AppLocalizer.string("Open"))
@@ -445,15 +615,15 @@ private struct QuickLaunchCard: View {
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(tint)
             }
+            .frame(height: footerHeight)
             .padding(.horizontal, 16)
-            .padding(.vertical, 13)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(tint.opacity(0.08))
             )
             .padding(8)
         }
-        .frame(width: 214, height: 176, alignment: .topLeading)
+        .frame(width: cardWidth, height: cardHeight, alignment: .topLeading)
         .background(
             LinearGradient(
                 colors: [

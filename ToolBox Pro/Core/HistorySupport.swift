@@ -42,6 +42,35 @@ enum HistoryStorage {
     }
 }
 
+enum RecentToolStorage {
+    static func loadToolIDs(from rawValue: String) -> [String] {
+        guard !rawValue.isEmpty else { return [] }
+        guard let data = rawValue.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+            return rawValue
+                .split(separator: ",")
+                .map(String.init)
+                .filter { !$0.isEmpty }
+        }
+        return decoded
+    }
+
+    static func saveToolIDs(_ ids: [String]) -> String {
+        guard let data = try? JSONEncoder().encode(ids),
+              let string = String(data: data, encoding: .utf8) else {
+            return ""
+        }
+        return string
+    }
+
+    static func register(_ id: String, in rawValue: String, limit: Int = 6) -> String {
+        var ids = loadToolIDs(from: rawValue)
+        ids.removeAll { $0 == id }
+        ids.insert(id, at: 0)
+        return saveToolIDs(Array(ids.prefix(limit)))
+    }
+}
+
 struct TaggedHistoryRow: View {
     @Binding var record: TaggedHistoryRecord
     let tint: Color
