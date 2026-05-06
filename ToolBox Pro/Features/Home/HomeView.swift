@@ -6,6 +6,7 @@ struct HomeView: View {
     @AppStorage("voiceToTextHistory") private var voiceToTextHistory = ""
     @AppStorage("recentToolIDs") private var recentToolIDs = ""
     @State private var searchText = ""
+    @FocusState private var isSearchFieldFocused: Bool
 
     private var tools: [ToolItem] { ToolItem.all }
     private var primaryTools: [ToolItem] { Array(tools.prefix(3)) }
@@ -49,6 +50,16 @@ struct HomeView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 30)
             }
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    dismissSearchKeyboard()
+                }
+            )
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 8).onChanged { _ in
+                    dismissSearchKeyboard()
+                }
+            )
         }
         .navigationTitle(AppLocalizer.string("Tools"))
         .navigationBarTitleDisplayMode(.inline)
@@ -74,6 +85,7 @@ struct HomeView: View {
                 TextField(AppLocalizer.string("Search tools"), text: $searchText)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .focused($isSearchFieldFocused)
 
                 if !searchText.isEmpty {
                     Button {
@@ -99,6 +111,11 @@ struct HomeView: View {
                 .appFont(size: 13, weight: .medium)
                 .foregroundColor(AppColor.secondaryText)
         }
+    }
+
+    private func dismissSearchKeyboard() {
+        guard isSearchFieldFocused else { return }
+        isSearchFieldFocused = false
     }
 
     private var editorialHeader: some View {
@@ -695,6 +712,8 @@ private struct HomeListCard: View {
 private struct CompactToolCard: View {
     let tool: ToolItem
 
+    private let cardHeight: CGFloat = 172
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -719,22 +738,28 @@ private struct CompactToolCard: View {
                 Text(tool.title)
                     .appFont(size: 16, weight: .bold)
                     .foregroundColor(AppColor.primaryText)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: 40, maxHeight: 40, alignment: .topLeading)
 
                 Text(tool.description)
                     .appFont(size: 13, weight: .regular)
                     .foregroundColor(AppColor.secondaryText)
                     .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50, alignment: .topLeading)
             }
 
             Text(tool.subtitle)
                 .appFont(size: 12, weight: .bold)
                 .foregroundColor(tool.color)
+                .lineLimit(1)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(tool.color.opacity(0.10))
                 .clipShape(Capsule())
         }
-        .frame(maxWidth: .infinity, minHeight: 158, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: cardHeight, maxHeight: cardHeight, alignment: .topLeading)
         .padding(16)
         .background(AppColor.surface.opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
