@@ -2,6 +2,37 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("appAppearance") private var appAppearanceRawValue = AppAppearance.system.rawValue
+    @Environment(\.openURL) private var openURL
+
+    private let recommendedApps: [RecommendedApp] = [
+        RecommendedApp(
+            title: "Local Lock Vault",
+            subtitle: "Private vault for sensitive files",
+            description: "Lock photos, videos, notes, and documents in a local-first vault with a clean private access flow.",
+            symbol: "lock.doc.fill",
+            accentColor: AppColor.primary,
+            appStoreURL: URL(string: "https://apps.apple.com/us/app/local-lock-vault/id6769601748"),
+            searchTerm: "Local Lock Vault"
+        ),
+        RecommendedApp(
+            title: "LocalHabit All",
+            subtitle: "Habits, focus, journal, and tasks",
+            description: "Keep routines, focus sessions, journal entries, and daily tasks together in one privacy-first workspace.",
+            symbol: "checklist.checked",
+            accentColor: AppColor.success,
+            appStoreURL: URL(string: "https://apps.apple.com/us/app/localhabit-all/id6764466369"),
+            searchTerm: "LocalHabit All"
+        ),
+        RecommendedApp(
+            title: "LocalNote Secret",
+            subtitle: "Private notes that stay on-device",
+            description: "Capture personal notes and sensitive ideas in a simple local notebook designed for privacy and quick access.",
+            symbol: "note.text.badge.shield.fill",
+            accentColor: AppColor.warning,
+            appStoreURL: URL(string: "https://apps.apple.com/us/app/localnote-secret/id6768145229"),
+            searchTerm: "LocalNote Secret"
+        )
+    ]
 
     var body: some View {
         ZStack {
@@ -45,6 +76,23 @@ struct SettingsView: View {
                             RoundedRectangle(cornerRadius: 24, style: .continuous)
                                 .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
                         )
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        settingsSectionHeader(
+                            eyebrow: AppLocalizer.string("More Apps"),
+                            title: AppLocalizer.string("Explore our other apps")
+                        )
+
+                        Text(AppLocalizer.string("Privacy-first tools for habits, private notes, and secure storage."))
+                            .appFont(size: 14, weight: .medium)
+                            .foregroundColor(AppColor.secondaryText)
+
+                        VStack(spacing: 12) {
+                            ForEach(recommendedApps) { app in
+                                recommendedAppCard(app)
+                            }
+                        }
                     }
 
                     // In-app purchase settings entry is temporarily hidden.
@@ -184,6 +232,89 @@ struct SettingsView: View {
         .padding(14)
         .background(tint.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func recommendedAppCard(_ app: RecommendedApp) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(app.accentColor.opacity(0.12))
+                        .frame(width: 54, height: 54)
+
+                    Image(systemName: app.symbol)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(app.accentColor)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(app.title)
+                        .appFont(size: 19, weight: .bold)
+                        .foregroundColor(AppColor.primaryText)
+
+                    Text(app.subtitle)
+                        .appFont(size: 13, weight: .bold)
+                        .foregroundColor(app.accentColor)
+
+                    Text(app.description)
+                        .appFont(size: 14, weight: .medium)
+                        .foregroundColor(AppColor.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            Button {
+                guard let url = app.destinationURL else { return }
+                openURL(url)
+            } label: {
+                HStack(spacing: 8) {
+                    Text(AppLocalizer.string("Download"))
+                        .appFont(size: 15, weight: .bold)
+
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(app.accentColor)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .feedbackOnTap(.action)
+        }
+        .padding(18)
+        .background(AppColor.surface.opacity(0.96))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
+        )
+    }
+}
+
+private struct RecommendedApp: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String
+    let description: String
+    let symbol: String
+    let accentColor: Color
+    let appStoreURL: URL?
+    let searchTerm: String
+
+    var destinationURL: URL? {
+        appStoreURL ?? appStoreSearchURL
+    }
+
+    var appStoreSearchURL: URL? {
+        var components = URLComponents(string: "https://apps.apple.com/us/search")
+        components?.queryItems = [
+            URLQueryItem(name: "term", value: searchTerm)
+        ]
+        return components?.url
     }
 }
 
