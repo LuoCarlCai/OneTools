@@ -112,7 +112,7 @@ struct WatermarkView: View {
 
     @State private var selectedImage: UIImage?
     @State private var isShowingPicker = false
-    @State private var watermarkText = "One Tools"
+    @State private var watermarkText = "PDF QR Image Tools"
     @State private var layoutStyle: WatermarkLayoutStyle = .floating
     @State private var fontStyle: WatermarkFontStyle = .rounded
     @State private var colorStyle: WatermarkColorStyle = .white

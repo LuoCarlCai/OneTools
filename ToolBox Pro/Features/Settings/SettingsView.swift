@@ -29,7 +29,7 @@ struct SettingsView: View {
             description: "Capture personal notes and sensitive ideas in a simple local notebook designed for privacy and quick access.",
             symbol: "note.text.badge.shield.fill",
             accentColor: AppColor.warning,
-            appStoreURL: URL(string: "https://apps.apple.com/us/app/localnote-secret/id6768145229"),
+            appStoreURL: URL(string: "https://apps.apple.com/us/app/localnote-secret/id6762242793"),
             searchTerm: "LocalNote Secret"
         )
     ]

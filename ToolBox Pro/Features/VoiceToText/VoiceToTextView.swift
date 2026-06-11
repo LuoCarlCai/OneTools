@@ -392,7 +392,7 @@ struct VoiceToTextView: View {
     private func exportTranscriptFileURL() -> URL? {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd_HH-mm"
-        let filename = "OneTools-Transcript-\(formatter.string(from: Date())).txt"
+        let filename = "PDF-QR-Image-Tools-Transcript-\(formatter.string(from: Date())).txt"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
 
         do {

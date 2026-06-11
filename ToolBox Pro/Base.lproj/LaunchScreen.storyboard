@@ -50,13 +50,13 @@
                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
                                         <color key="textColor" red="0.4823529412" green="0.5294117647" blue="0.5960784314" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="OneTools" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="title-main">
-                                        <rect key="frame" x="0.0" y="28" width="180" height="48"/>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="42"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="PDF QR Image Tools" textAlignment="natural" lineBreakMode="tailTruncation" adjustsFontSizeToFit="YES" translatesAutoresizingMaskIntoConstraints="NO" id="title-main">
+                                        <rect key="frame" x="0.0" y="28" width="300" height="48"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="36"/>
                                         <color key="textColor" red="0.05882352941" green="0.09019607843" blue="0.1647058824" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Everyday utility tools, refined." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="subtitle-main">
-                                        <rect key="frame" x="0.0" y="86" width="244" height="22"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="PDF, QR, image, and voice tools." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="subtitle-main">
+                                        <rect key="frame" x="0.0" y="86" width="280" height="22"/>
                                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
                                         <color key="textColor" red="0.4" green="0.4392156863" blue="0.5215686275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </label>

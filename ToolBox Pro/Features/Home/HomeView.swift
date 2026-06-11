@@ -11,6 +11,17 @@ struct HomeView: View {
     private var tools: [ToolItem] { ToolItem.all }
     private var primaryTools: [ToolItem] { Array(tools.prefix(3)) }
     private var secondaryTools: [ToolItem] { Array(tools.dropFirst(3)) }
+    private var popularTasks: [PopularTask] {
+        [
+            PopularTask(id: "scan-qr", toolID: "qr-toolkit", title: AppLocalizer.string("Scan QR"), detail: AppLocalizer.string("Open links, Wi-Fi, and contact codes"), symbol: "qrcode.viewfinder", color: AppColor.warning),
+            PopularTask(id: "make-qr", toolID: "qr-toolkit", title: AppLocalizer.string("Make QR"), detail: AppLocalizer.string("Create codes for text, links, Wi-Fi, and phone"), symbol: "qrcode", color: AppColor.primary),
+            PopularTask(id: "photo-pdf", toolID: "image-pdf", title: AppLocalizer.string("Photo to PDF"), detail: AppLocalizer.string("Export receipts, notes, and screenshots as PDF"), symbol: "doc.richtext", color: Color(hex: 0x2563EB)),
+            PopularTask(id: "compress-image", toolID: "compressor", title: AppLocalizer.string("Compress Photos"), detail: AppLocalizer.string("Reduce image size before upload or sharing"), symbol: "arrow.down.right.and.arrow.up.left", color: Color(hex: 0x0EA5A8)),
+            PopularTask(id: "watermark-photo", toolID: "watermark", title: AppLocalizer.string("Add Watermark"), detail: AppLocalizer.string("Protect ID photos, documents, and screenshots"), symbol: "seal.fill", color: Color(hex: 0x8B5CF6)),
+            PopularTask(id: "voice-note", toolID: "speech-to-text", title: AppLocalizer.string("Voice Notes"), detail: AppLocalizer.string("Turn meetings and ideas into editable text"), symbol: "waveform", color: Color(hex: 0xF15B6C)),
+            PopularTask(id: "discount-math", toolID: "calculator", title: AppLocalizer.string("Discount Math"), detail: AppLocalizer.string("Calculate totals, discounts, tips, and tax"), symbol: "percent", color: AppColor.success)
+        ]
+    }
     private var recentTools: [ToolItem] {
         RecentToolStorage.loadToolIDs(from: recentToolIDs)
             .compactMap { id in tools.first(where: { $0.id == id }) }
@@ -19,7 +30,7 @@ struct HomeView: View {
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !keyword.isEmpty else { return tools }
         return tools.filter {
-            [$0.title, $0.subtitle, $0.description]
+            [$0.title, $0.subtitle, $0.description, $0.searchKeywords.joined(separator: " ")]
                 .joined(separator: " ")
                 .localizedCaseInsensitiveContains(keyword)
         }
@@ -36,6 +47,7 @@ struct HomeView: View {
                     editorialHeader
                     searchSection
                     if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        popularTasksSection
                         spotlightSection
                         quickLaunchSection
                         recentToolsSection
@@ -136,15 +148,40 @@ struct HomeView: View {
                     .foregroundColor(AppColor.secondaryText)
             }
 
-            Text(AppLocalizer.string("Your everyday tools, in one place"))
+            Text(AppLocalizer.string("QR, image, voice, and calculator tools"))
                 .appFont(size: 32, weight: .bold)
                 .foregroundColor(AppColor.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(AppLocalizer.string("Open calculator, converter, QR scan, and voice tools without jumping between apps."))
+            Text(AppLocalizer.string("Scan codes, compress photos, add watermarks, convert units, and transcribe voice notes without jumping between apps."))
                 .appFont(size: 16, weight: .medium)
                 .foregroundColor(AppColor.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var popularTasksSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader(
+                eyebrow: AppLocalizer.string("Popular Tasks"),
+                title: AppLocalizer.string("Start with what you need")
+            )
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(popularTasks) { task in
+                        NavigationLink(destination: destination(for: task).hidesTabBarOnPush()) {
+                            PopularTaskCard(task: task)
+                        }
+                        .buttonStyle(.plain)
+                        .feedbackOnTap(.action)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            recordRecentTool(task.toolID)
+                        })
+                    }
+                }
+                .padding(.horizontal, 1)
+            }
         }
     }
 
@@ -343,7 +380,7 @@ struct HomeView: View {
                 title: AppLocalizer.string("Save and share")
             )
 
-            HStack(alignment: .top, spacing: 12) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 ForEach(secondaryTools) { tool in
                     NavigationLink(destination: ToolDestinationView(tool: tool).hidesTabBarOnPush()) {
                         CompactToolCard(tool: tool)
@@ -455,6 +492,24 @@ struct HomeView: View {
         recentToolIDs = RecentToolStorage.register(id, in: recentToolIDs)
     }
 
+    @ViewBuilder
+    private func destination(for task: PopularTask) -> some View {
+        switch task.id {
+        case "scan-qr":
+            QRCodeToolView(initialMode: .scan)
+        case "make-qr":
+            QRCodeToolView(initialMode: .generate)
+        case "photo-pdf":
+            ImagePDFView()
+        default:
+            if let tool = tools.first(where: { $0.id == task.toolID }) {
+                ToolDestinationView(tool: tool)
+            } else {
+                EmptyView()
+            }
+        }
+    }
+
     private func sectionHeader(eyebrow: String, title: String) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(eyebrow)
@@ -480,6 +535,8 @@ private struct ToolDestinationView: View {
             UnitConverterView()
         case "qr-toolkit":
             QRCodeToolView()
+        case "image-pdf":
+            ImagePDFView()
         case "watermark":
             WatermarkView()
         case "compressor":
@@ -555,6 +612,70 @@ private struct HeroMetric: View {
         .padding(12)
         .background(.white.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct PopularTask: Identifiable {
+    let id: String
+    let toolID: String
+    let title: String
+    let detail: String
+    let symbol: String
+    let color: Color
+}
+
+private struct PopularTaskCard: View {
+    let task: PopularTask
+
+    private let cardWidth: CGFloat = 176
+    private let cardHeight: CGFloat = 154
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(task.color.opacity(0.12))
+                        .frame(width: 42, height: 42)
+
+                    Image(systemName: task.symbol)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(task.color)
+                }
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(AppColor.secondaryText.opacity(0.65))
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(task.title)
+                    .appFont(size: 17, weight: .bold)
+                    .foregroundColor(AppColor.primaryText)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: 40, alignment: .topLeading)
+
+                Text(task.detail)
+                    .appFont(size: 13, weight: .medium)
+                    .foregroundColor(AppColor.secondaryText)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: 48, alignment: .topLeading)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(15)
+        .frame(width: cardWidth, height: cardHeight, alignment: .topLeading)
+        .background(AppColor.surface.opacity(0.95))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppColor.border.opacity(0.75), lineWidth: 1)
+        )
     }
 }
 
